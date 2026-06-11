@@ -1,0 +1,27 @@
+name: Daily Update
+
+on:
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 실행
+        run: python update_data.py
+
+      - name: 커밋 & 푸시
+        run: |
+          git config user.name "NH_ari Bot"
+          git config user.email "bot@nhfarmstock.com"
+          git add -A
+          git commit -m "Daily update $(date '+%Y-%m-%d')" || echo "No changes"
+          git push
