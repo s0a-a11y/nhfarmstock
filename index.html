@@ -360,7 +360,7 @@ input,select{font-family:var(--f);outline:none}
   </div>
   <div class="hdr-r">
     <div class="live-pill"><div class="ldot"></div>실시간 경매완료</div>
-    <div class="hdr-date">2026. 06. 11 (목)</div>
+    <div class="hdr-date" id="hdrDate"></div>
   </div>
 </div>
 
@@ -392,33 +392,8 @@ input,select{font-family:var(--f);outline:none}
     <button class="mbt"    data-m="daegu"    onclick="selMkt(this,'daegu')"><span class="dot" style="background:#0F766E"></span>대구 북부</button>
   </div>
 
-  <!-- ② HERO 3-CARD STRIP  — 시장 충격 즉각 인지 -->
-  <div class="hero-strip">
-    <div class="hero-card hc-surge">
-      <div><span class="hero-tag">🔥 가격 급등 경보</span></div>
-      <div class="hero-main">상추</div>
-      <div><span class="hero-pct">▲ 22.1%</span></div>
-      <div class="hero-sub">고온 생육부진 · 물량 절대 부족 공백<br>가락시장 특품 4,222원/kg</div>
-    </div>
-    <div class="hero-card hc-drop">
-      <div><span class="hero-tag">📦 공급 과잉 폭락</span></div>
-      <div class="hero-main">양파</div>
-      <div><span class="hero-pct">▼ 8.1%</span></div>
-      <div class="hero-sub">조생종 수확 피크 · 전국 대형마트 3사 행사 동시 진행<br>가락시장 특품 1,050원/kg</div>
-    </div>
-    <div class="hero-card hc-sale">
-      <div><span class="hero-tag">🛒 유통사 대형 행사</span></div>
-      <div class="hero-main">수박</div>
-      <div><span class="hero-pct">이마트 고래잇 40%↓</span></div>
-      <div class="hero-sub">롯데·이마트·홈플러스 3사 동시 집중 매수<br>가락시장 특품 1,800원/kg</div>
-    </div>
-    <div class="hero-card hc-gap">
-      <div><span class="hero-tag">⚠️ 도매시장 격차 리스크</span></div>
-      <div class="hero-main">배추</div>
-      <div><span class="hero-pct">시장간 격차 19.2%</span></div>
-      <div class="hero-sub">시장별 반입 불균형 심화 · 교차 매매 추천<br>가락 1,200원/kg vs 부산 1,280원/kg</div>
-    </div>
-  </div>
+  <!-- ② HERO 4-CARD STRIP — 데이터 기반 자동 생성 -->
+  <div class="hero-strip" id="heroStrip"></div>
 
   <!-- ③ TREND CHART (full-width hero) -->
   <div class="trend-hero">
@@ -634,7 +609,7 @@ function goTab(el,id){
     var e=document.getElementById('tab-'+t);
     if(e) e.style.display=t===id?'block':'none';
   });
-  if(id==='overview'&&window._tabReady){renderTopDashboardChart();renderKPI('all');renderMainTbl('all');renderTodayEvents();renderTopMovers();}
+  if(id==='overview'&&window._tabReady){renderTopDashboardChart();renderKPI('all');renderMainTbl('all');renderTodayEvents();renderTopMovers();renderHero();}
   if(id==='volume'&&window._tabReady){renderVol5y();renderVol30d();renderVolItems();}
   if(id==='prices'&&window._tabReady)renderPriceComp();
   if(id==='items'&&window._tabReady)renderItemBoard();
@@ -958,7 +933,7 @@ function sigLight(v){
   return'green';
 }
 
-function mLabs30(){return Array.from({length:30},(_,i)=>{const d=new Date(2026,5,11-29+i);return`${d.getMonth()+1}/${d.getDate()}`})}
+function mLabs30(){const t=new Date();return Array.from({length:30},(_,i)=>{const d=new Date(t);d.setDate(t.getDate()-29+i);return`${d.getMonth()+1}/${d.getDate()}`})}
 function chartOpts(extra={}){
   return{responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'rgba(26,35,50,.92)',padding:10,titleFont:{size:11},bodyFont:{size:11},titleColor:'#fff',bodyColor:'rgba(255,255,255,.85)'}},
@@ -1366,6 +1341,27 @@ function renderEvents(){
   }).join('');
 }
 
+/* ════════ 히어로 카드 자동 생성 ════════ */
+function renderHero(){
+  const data=ALL.map(it=>{
+    const c=Object.values(it.chg).reduce((a,b)=>a+b,0)/5;
+    const prices=MKT_KEYS.map(k=>boxToKg(it.prices[k],it.name));
+    const gap=Math.round((Math.max(...prices)-Math.min(...prices))/Math.min(...prices)*100);
+    const sale=(it.sales||[]).reduce((m,s)=>!m||s.pct>m.pct?s:m,null);
+    return{it,c,gap,sale,p:garakSpecialKg(it)};
+  });
+  const up=[...data].sort((a,b)=>b.c-a.c)[0];
+  const dn=[...data].sort((a,b)=>a.c-b.c)[0];
+  const sl=[...data].filter(d=>d.sale).sort((a,b)=>b.sale.pct-a.sale.pct)[0];
+  const gp=[...data].sort((a,b)=>b.gap-a.gap)[0];
+  const el=document.getElementById('heroStrip'); if(!el) return;
+  el.innerHTML=`
+    <div class="hero-card hc-surge" onclick="openDp('${up.it.name}')" style="cursor:pointer"><div><span class="hero-tag">🔥 가격 급등 경보</span></div><div class="hero-main">${up.it.name}</div><div><span class="hero-pct">▲ ${up.c.toFixed(1)}%</span></div><div class="hero-sub">${up.it.insight}<br>가락 특품 ${up.p.toLocaleString()}원/${unitOf(up.it.name)}</div></div>
+    <div class="hero-card hc-drop" onclick="openDp('${dn.it.name}')" style="cursor:pointer"><div><span class="hero-tag">📦 공급 과잉 폭락</span></div><div class="hero-main">${dn.it.name}</div><div><span class="hero-pct">▼ ${Math.abs(dn.c).toFixed(1)}%</span></div><div class="hero-sub">${dn.it.insight}<br>가락 특품 ${dn.p.toLocaleString()}원/${unitOf(dn.it.name)}</div></div>
+    <div class="hero-card hc-sale" onclick="openDp('${sl.it.name}')" style="cursor:pointer"><div><span class="hero-tag">🛒 유통사 대형 행사</span></div><div class="hero-main">${sl.it.name}</div><div><span class="hero-pct">${sl.sale.store} ${sl.sale.pct}%↓</span></div><div class="hero-sub">${sl.sale.detail}<br>가락 특품 ${sl.p.toLocaleString()}원/${unitOf(sl.it.name)}</div></div>
+    <div class="hero-card hc-gap" onclick="openDp('${gp.it.name}')" style="cursor:pointer"><div><span class="hero-tag">⚠️ 도매시장 격차 리스크</span></div><div class="hero-main">${gp.it.name}</div><div><span class="hero-pct">시장간 격차 ${gp.gap}%</span></div><div class="hero-sub">시장별 반입 불균형 · 교차 매매 추천<br>가락 특품 ${gp.p.toLocaleString()}원/${unitOf(gp.it.name)}</div></div>`;
+}
+
 /* ════════ 등락률 TOP3 ════════ */
 function renderTopMovers(){
   const arr=ALL.map(it=>({n:it.name,c:Object.values(it.chg).reduce((a,b)=>a+b,0)/5,p:garakSpecialKg(it),u:unitOf(it.name)}));
@@ -1388,6 +1384,9 @@ function populateSels(){
 }
 window.onload=()=>{
   window._tabReady=true;
+  const _d=new Date(),_wd=['일','월','화','수','목','금','토'];
+  document.getElementById('hdrDate').textContent=`${_d.getFullYear()}. ${String(_d.getMonth()+1).padStart(2,'0')}. ${String(_d.getDate()).padStart(2,'0')} (${_wd[_d.getDay()]})`;
+  renderHero();
   buildTicker();
   populateSels();
   const ci=document.getElementById('corpItemSel'); if(ci) ci.value='수박';
