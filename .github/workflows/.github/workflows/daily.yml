@@ -1,0 +1,36 @@
+name: Daily Update
+
+on:
+  schedule:
+    - cron: '0 21 * * *'   # UTC 21:00 = 한국 오전 6:00
+    - cron: '0 3 * * *'    # UTC 03:00 = 한국 낮 12:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 의존성 설치
+        run: pip install requests
+
+      - name: 데이터 갱신
+        run: python update_data.py
+        env:
+          AT_API_KEY: ${{ secrets.AT_API_KEY }}
+
+      - name: 커밋 & 푸시
+        run: |
+          git config user.name "NH_FS Bot"
+          git config user.email "bot@nhfarmstock.com"
+          git add -A
+          git commit -m "Daily update $(date -u -d '+9 hours' '+%Y-%m-%d %H:%M KST')" || echo "No changes"
+          git push
