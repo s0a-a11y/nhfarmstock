@@ -73,6 +73,19 @@ ITEM_CODES = {
     "청양고추":   ("12", "05", ["01"]),
 }
 
+# 백오이: 포장 중량(kg) -> 개수 매핑 (10kg=50개, 15/18/20/21kg=100개)
+BAEK_OI_PCS = {
+    10: 50,
+    15: 100, 18: 100, 20: 100, 21: 100,
+}
+def baekoi_pieces(unit_qty_kg):
+    """포장 중량(kg)에 해당하는 개수를 반환. 매핑에 없으면 100개/15kg 비율로 근사."""
+    rounded = round(unit_qty_kg)
+    if rounded in BAEK_OI_PCS:
+        return BAEK_OI_PCS[rounded]
+    # 알려지지 않은 규격 -> 15kg=100개 비율로 선형 근사
+    return max(1, round(unit_qty_kg * 100 / 15))
+
 GROUPS = {}
 for nm, (l, mc, _) in ITEM_CODES.items():
     GROUPS.setdefault((l, mc), []).append(nm)
@@ -213,8 +226,10 @@ def process(m):
                 price_per_kg = agg["avg_price_per_pkg"] / api_pkg_kg if api_pkg_kg > 0 else 0
                 if name in PIECE_ITEMS:
                     # 개수 단위 품목(백오이): 우리 표시는 '원/개'
-                    # API 단위가 kg라면 1개당 평균중량으로 환산 필요 -> 단순화: 기존가 유지
-                    new_price = old_prices[i]
+                    # API 포장 1개당 가격(avg_price_per_pkg)을, 그 포장의 실제 중량(api_pkg_kg)에
+                    # 해당하는 개수(baekoi_pieces)로 나눠 '원/개' 산출
+                    pieces = baekoi_pieces(api_pkg_kg)
+                    new_price = max(1, round(agg["avg_price_per_pkg"] / pieces))
                 elif name == "수박":
                     # 우리 표시는 '1통(9kg)당 원'
                     new_price = max(100, round(price_per_kg * 9))
