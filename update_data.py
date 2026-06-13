@@ -178,14 +178,15 @@ if KEY:
     print(f"▶ API 호출: 성공 {api_ok} / 실패 {api_fail}  |  데이터 확보 품목: {len(results)}/{len(ITEM_CODES)}")
 
     # 디버그: 품목별 가락시장 API 원본 단위/가격 출력 (단위 환산 검증용)
-    print("--- 디버그: 가락(garak) 기준 API 원시값 ---")
+    print("--- 디버그: 가락(garak) 기준 API 원시값 (전 품목) ---")
     for nm, mdata in results.items():
         g = mdata.get("garak")
         if g:
             box_kg = BOX_KG_DEBUG.get(nm, "?")
-            print(f"  {nm}: avg_unit_qty={g['avg_unit_qty']:.2f}kg/포장, "
-                  f"avg_price_per_pkg={g['avg_price_per_pkg']:.0f}원, "
-                  f"qty_kg={g['qty_kg']:.1f}kg, 우리BOX_KG={box_kg}")
+            ppk = g['avg_price_per_pkg'] / g['avg_unit_qty'] if g['avg_unit_qty'] else 0
+            print(f"  {nm}: avg_unit_qty={g['avg_unit_qty']:.2f}, "
+                  f"avg_price_per_pkg={g['avg_price_per_pkg']:.1f}, "
+                  f"price_per_kg={ppk:.1f}, qty_kg={g['qty_kg']:.1f}, BOX_KG={box_kg}")
 else:
     print("⚠️ AT_API_KEY 미설정 — 전체 랜덤 변동 모드")
 
@@ -240,6 +241,11 @@ def process(m):
             else:
                 new_price = old_prices[i]
                 new_vol = old_vols[i]
+            # 안전장치: 계산된 가격이 기존가 대비 0.2~5배 범위를 벗어나면
+            # 단위 환산 오류로 간주하고 기존가를 유지 (화면 붕괴 방지)
+            if old_prices[i] > 0 and not (old_prices[i] * 0.2 <= new_price <= old_prices[i] * 5):
+                new_price = old_prices[i]
+
             chg = round((new_price - old_prices[i]) / old_prices[i] * 100, 1) if old_prices[i] > 0 else 0.0
             new_prices.append(new_price)
             new_vols.append(new_vol)
