@@ -105,27 +105,43 @@ def fetch_trades(whsl_mrkt_cd, lclsf, mclsf, ymd, retries=2):
 
 
 def aggregate(items, sclsf_filter):
-    """반입량(kg합계)과 가중평균 단가(원/kg)를 계산. 데이터 없으면 None."""
+    """반입량(kg합계)과 가중평균 '포장단위당 낙찰가'(scsbd_prc, 원/포장)를 계산.
+    또한 가중평균 unit_qty(포장당 kg)도 함께 반환하여, 우리 BOX_KG와의
+    환산 비율을 계산할 수 있게 한다. 데이터 없으면 None."""
     valid = []
     for it in items:
         if sclsf_filter is not None and it.get("gds_sclsf_cd", "") not in sclsf_filter:
             continue
         try:
-            qty = float(it.get("qty", 0) or 0)
-            price = float(it.get("scsbd_prc", 0) or 0)
-            unit_qty = float(it.get("unit_qty", 0) or 0)
+            qty = float(it.get("qty", 0) or 0)          # 거래 건수(포장 개수)
+            price = float(it.get("scsbd_prc", 0) or 0)  # 포장 1개당 낙찰가(원)
+            unit_qty = float(it.get("unit_qty", 0) or 0)  # 포장 1개당 중량(kg 등)
         except (TypeError, ValueError):
             continue
-        if qty <= 0 or price <= 0:
+        if qty <= 0 or price <= 0 or unit_qty <= 0:
             continue
-        valid.append((qty, price, unit_qty if unit_qty > 0 else 1.0))
+        valid.append((qty, price, unit_qty))
     if not valid:
         return None
-    total_qty_kg = sum(q * u for q, _, u in valid)
-    total_amount = sum(q * p for q, p, _ in valid)
-    total_qty = sum(q for q, _, _ in valid)
-    return {"qty_kg": total_qty_kg, "avg_price_per_unit": total_amount / total_qty}
+    total_qty = sum(q for q, _, _ in valid)            # 총 포장 개수
+    total_qty_kg = sum(q * u for q, _, u in valid)     # 총 중량(kg)
+    total_amount = sum(q * p for q, p, _ in valid)     # 총 거래금액(원)
+    avg_price_per_pkg = total_amount / total_qty       # 원/포장(가중평균)
+    avg_unit_qty = total_qty_kg / total_qty            # kg/포장(가중평균)
+    return {
+        "qty_kg": total_qty_kg,
+        "avg_price_per_pkg": avg_price_per_pkg,
+        "avg_unit_qty": avg_unit_qty,
+    }
 
+
+# ──────────────────────────────────────────
+# 0) BOX_KG 미리 로드 (디버그 출력용)
+# ──────────────────────────────────────────
+with open("index.html", "r", encoding="utf-8") as f:
+    _html_preview = f.read()
+_box_m = re.search(r"const BOX_KG=\{(.*?)\};", _html_preview, re.S)
+BOX_KG_DEBUG = {k: float(v) for k, v in re.findall(r"'([^']+)':([\d.]+)", _box_m.group(1))} if _box_m else {}
 
 # ──────────────────────────────────────────
 # 1) API에서 실데이터 수집
@@ -147,6 +163,16 @@ if KEY:
                     results.setdefault(nm, {})[mkey] = agg
             time.sleep(0.1)
     print(f"▶ API 호출: 성공 {api_ok} / 실패 {api_fail}  |  데이터 확보 품목: {len(results)}/{len(ITEM_CODES)}")
+
+    # 디버그: 품목별 가락시장 API 원본 단위/가격 출력 (단위 환산 검증용)
+    print("--- 디버그: 가락(garak) 기준 API 원시값 ---")
+    for nm, mdata in results.items():
+        g = mdata.get("garak")
+        if g:
+            box_kg = BOX_KG_DEBUG.get(nm, "?")
+            print(f"  {nm}: avg_unit_qty={g['avg_unit_qty']:.2f}kg/포장, "
+                  f"avg_price_per_pkg={g['avg_price_per_pkg']:.0f}원, "
+                  f"qty_kg={g['qty_kg']:.1f}kg, 우리BOX_KG={box_kg}")
 else:
     print("⚠️ AT_API_KEY 미설정 — 전체 랜덤 변동 모드")
 
@@ -177,14 +203,24 @@ def process(m):
 
     market_data = results.get(name)
     if market_data:
-        div = PIECE_ITEMS.get(name) or BOX_KG.get(name, 10)
-        if name == "수박":
-            div = 2  # 18kg(2입) 박스 -> 1통(9kg) 가격
+        # 우리 사이트 기준 "박스(포장)당 kg" (BOX_KG). 수박은 18kg(2입) 박스 기준.
+        our_box_kg = BOX_KG.get(name, 10)
         new_prices, new_vols, new_chgs = [], [], []
         for i, mkey in enumerate(MKTS_K):
             agg = market_data.get(mkey)
             if agg:
-                new_price = max(100, round(agg["avg_price_per_unit"] * div))
+                api_pkg_kg = agg["avg_unit_qty"]  # API 포장 1개당 kg
+                price_per_kg = agg["avg_price_per_pkg"] / api_pkg_kg if api_pkg_kg > 0 else 0
+                if name in PIECE_ITEMS:
+                    # 개수 단위 품목(백오이): 우리 표시는 '원/개'
+                    # API 단위가 kg라면 1개당 평균중량으로 환산 필요 -> 단순화: 기존가 유지
+                    new_price = old_prices[i]
+                elif name == "수박":
+                    # 우리 표시는 '1통(9kg)당 원'
+                    new_price = max(100, round(price_per_kg * 9))
+                else:
+                    # 우리 표시는 '박스(BOX_KG)당 원'
+                    new_price = max(100, round(price_per_kg * our_box_kg))
                 new_vol = round(agg["qty_kg"] / 1000, 1)  # kg -> 톤
             else:
                 new_price = old_prices[i]
