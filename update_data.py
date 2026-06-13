@@ -117,10 +117,13 @@ def fetch_trades(whsl_mrkt_cd, lclsf, mclsf, ymd, retries=2):
             return None
 
 
-def aggregate(items, sclsf_filter):
+def aggregate(items, sclsf_filter, is_baekoi=False):
     """반입량(kg합계)과 가중평균 '포장단위당 낙찰가'(scsbd_prc, 원/포장)를 계산.
     또한 가중평균 unit_qty(포장당 kg)도 함께 반환하여, 우리 BOX_KG와의
-    환산 비율을 계산할 수 있게 한다. 데이터 없으면 None."""
+    환산 비율을 계산할 수 있게 한다. 데이터 없으면 None.
+
+    is_baekoi=True인 경우, 거래 건별로 포장중량(unit_qty)에 맞는 개수를
+    baekoi_pieces()로 환산해 '원/개' 가중평균(avg_price_per_piece)도 계산한다."""
     valid = []
     for it in items:
         if sclsf_filter is not None and it.get("gds_sclsf_cd", "") not in sclsf_filter:
@@ -141,11 +144,21 @@ def aggregate(items, sclsf_filter):
     total_amount = sum(q * p for q, p, _ in valid)     # 총 거래금액(원)
     avg_price_per_pkg = total_amount / total_qty       # 원/포장(가중평균)
     avg_unit_qty = total_qty_kg / total_qty            # kg/포장(가중평균)
-    return {
+    result = {
         "qty_kg": total_qty_kg,
         "avg_price_per_pkg": avg_price_per_pkg,
         "avg_unit_qty": avg_unit_qty,
     }
+    if is_baekoi:
+        total_pieces = 0.0
+        total_amount_pieces = 0.0
+        for q, p, u in valid:
+            pcs = baekoi_pieces(u)
+            total_pieces += q * pcs
+            total_amount_pieces += q * p
+        if total_pieces > 0:
+            result["avg_price_per_piece"] = total_amount_pieces / total_pieces
+    return result
 
 
 # ──────────────────────────────────────────
@@ -171,7 +184,7 @@ if KEY:
             api_ok += 1
             for nm in names:
                 _, _, sclsf_filter = ITEM_CODES[nm]
-                agg = aggregate(items, sclsf_filter)
+                agg = aggregate(items, sclsf_filter, is_baekoi=(nm == "백오이"))
                 if agg:
                     results.setdefault(nm, {})[mkey] = agg
             time.sleep(0.1)
@@ -226,11 +239,12 @@ def process(m):
                 api_pkg_kg = agg["avg_unit_qty"]  # API 포장 1개당 kg
                 price_per_kg = agg["avg_price_per_pkg"] / api_pkg_kg if api_pkg_kg > 0 else 0
                 if name in PIECE_ITEMS:
-                    # 개수 단위 품목(백오이): 우리 표시는 '원/개'
-                    # API 포장 1개당 가격(avg_price_per_pkg)을, 그 포장의 실제 중량(api_pkg_kg)에
-                    # 해당하는 개수(baekoi_pieces)로 나눠 '원/개' 산출
-                    pieces = baekoi_pieces(api_pkg_kg)
-                    new_price = max(1, round(agg["avg_price_per_pkg"] / pieces))
+                    # 개수 단위 품목(백오이): 거래 건별로 포장중량->개수 환산한
+                    # 가중평균 '원/개'(avg_price_per_piece)를 그대로 사용
+                    if "avg_price_per_piece" in agg:
+                        new_price = max(1, round(agg["avg_price_per_piece"]))
+                    else:
+                        new_price = old_prices[i]
                 elif name == "수박":
                     # 우리 표시는 '1통(9kg)당 원'
                     new_price = max(100, round(price_per_kg * 9))
