@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-data.go.kr 'katCode' API 테스트 (2차)
-- 품목 대분류(02~07)별 중/소분류 코드+명칭을 간결하게 출력
-- 38개 품목(양파, 사과, 배추, 감귤, 고추, 오이 등) 코드 매칭용
+data.go.kr 'katCode' API 테스트 (3차)
+- 06(과실류) 2페이지: 복숭아 이후 품목(천도/단감/감귤/참외/딸기/수박 등)
+- 03, 04 대분류명 및 중/소분류 확인 (채소류 추정)
 """
 import os
 import requests
@@ -10,17 +10,17 @@ import requests
 KEY = os.environ["AT_API_KEY"]
 BASE = "https://apis.data.go.kr/B552845/katCode"
 
-def call_goods(lcode, num=300):
+def call_goods(lcode, page=1, num=300):
     params = {
         "serviceKey": KEY,
         "returnType": "json",
         "numOfRows": num,
-        "pageNo": 1,
+        "pageNo": page,
         "cond[gds_lclsf_cd::EQ]": lcode,
         "selectable": "gds_lclsf_cd,gds_lclsf_nm,gds_mclsf_cd,gds_mclsf_nm,gds_sclsf_cd,gds_sclsf_nm",
     }
     r = requests.get(f"{BASE}/goods", params=params, timeout=20)
-    print(f"\n===== lclsf={lcode} -> status {r.status_code} =====")
+    print(f"\n===== lclsf={lcode} page={page} -> status {r.status_code} =====")
     try:
         data = r.json()
         items = data.get("response", {}).get("body", {}).get("items", {}).get("item", [])
@@ -39,5 +39,9 @@ def call_goods(lcode, num=300):
         print("error:", e)
         print(r.text[:1000])
 
-for lcode in ["02","03","04","05","06","07"]:
-    call_goods(lcode)
+# 06(과실류) 2페이지 - 복숭아 이후 (천도/단감/감귤/참외/딸기/수박 등)
+call_goods("06", page=2)
+
+# 03, 04 대분류 확인 (채소류 추정)
+call_goods("03")
+call_goods("04")
