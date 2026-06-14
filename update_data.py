@@ -50,23 +50,24 @@ ITEM_CODES = {
     "천도복숭아": ("06", "04", ["47", "E7", "E8", "B4"]),
     "단감":       ("06", "05", ["01"]),
     "태추단감":   ("06", "05", ["22"]),
-    "감귤":       ("06", "14", None),
-    "수박":       ("08", "01", ["00"]),
-    "일반토마토": ("08", "03", ["03"]),
+    "감귤(하우스)": ("06", "14", ["05"]),
+    "감귤(노지)":   ("06", "14", ["00", "01", "02", "03"]),
+    "수박":       ("08", "01", ["01"]),
+    "일반토마토": ("08", "03", ["01", "03"]),
     "딸기":       ("08", "04", ["00"]),
-    "방울토마토": ("08", "06", ["01"]),
+    "방울토마토": ("08", "06", ["01", "02", "03"]),
     "백오이":     ("09", "01", ["02"]),
     "취청오이":   ("09", "01", ["01"]),
     "가시오이":   ("09", "01", ["03"]),
     "애호박":     ("09", "02", ["01"]),
     "쥬키니":     ("09", "02", ["02"]),
     "단호박":     ("09", "02", ["05"]),
-    "배추":       ("10", "01", ["00"]),
+    "배추":       ("10", "01", ["00", "01", "02"]),
     "양배추":     ("10", "04", ["01"]),
     "적상추":     ("10", "05", ["02"]),
     "청상추":     ("10", "05", ["01"]),
     "포기상추":   ("10", "05", ["03", "04"]),
-    "무":         ("11", "01", ["00"]),
+    "무":         ("11", "01", ["00", "01", "02"]),
     "양파":       ("12", "01", ["01"]),
     "대파":       ("12", "02", ["01"]),
     "풋고추":     ("12", "05", ["05"]),
@@ -107,7 +108,13 @@ def fetch_trades(whsl_mrkt_cd, lclsf, mclsf, ymd, retries=2):
 def aggregate(items, sclsf_filter):
     """반입량(kg합계)과 가중평균 '포장단위당 낙찰가'(scsbd_prc, 원/포장)를 계산.
     또한 가중평균 unit_qty(포장당 kg)도 함께 반환하여, 우리 BOX_KG와의
-    환산 비율을 계산할 수 있게 한다. 데이터 없으면 None."""
+    환산 비율을 계산할 수 있게 한다. 데이터 없으면 None.
+
+    이상치 제거: unit_qty(포장단위)별로 그룹화하여 price_per_kg을 구하고,
+    거래건수가 전체의 5% 미만이면서 price_per_kg이 전체 중앙값(median) 대비
+    1.5배 이상/0.67배 이하인 그룹은 소수 특수거래(이상치)로 간주해 제외한다.
+    예: 감귤(하우스) 가락시장의 8kg/9.6kg 파렛트 1~2건이 price_per_kg을
+    12,500~17,500원까지 왜곡시키는 케이스 방지."""
     valid = []
     for it in items:
         if sclsf_filter is not None and it.get("gds_sclsf_cd", "") not in sclsf_filter:
@@ -123,9 +130,35 @@ def aggregate(items, sclsf_filter):
         valid.append((qty, price, unit_qty))
     if not valid:
         return None
-    total_qty = sum(q for q, _, _ in valid)            # 총 포장 개수
-    total_qty_kg = sum(q * u for q, _, u in valid)     # 총 중량(kg)
-    total_amount = sum(q * p for q, p, _ in valid)     # 총 거래금액(원)
+
+    # unit_qty별 그룹화
+    groups = {}
+    for q, p, u in valid:
+        g = groups.setdefault(u, {"qty": 0.0, "amount": 0.0})
+        g["qty"] += q
+        g["amount"] += q * p
+
+    total_qty_all = sum(g["qty"] for g in groups.values())
+    # 그룹별 price_per_kg
+    group_ppk = {u: g["amount"] / (g["qty"] * u) for u, g in groups.items()}
+    ppk_values = sorted(group_ppk.values())
+    median_ppk = ppk_values[len(ppk_values) // 2]
+
+    # 이상치 그룹 제외 (단, 모든 그룹이 제외 대상이면 전부 유지)
+    kept = {}
+    for u, g in groups.items():
+        ppk = group_ppk[u]
+        small = g["qty"] / total_qty_all < 0.05 if total_qty_all > 0 else False
+        far = ppk > median_ppk * 1.5 or ppk < median_ppk / 1.5
+        if small and far:
+            continue
+        kept[u] = g
+    if not kept:
+        kept = groups
+
+    total_qty = sum(g["qty"] for g in kept.values())            # 총 포장 개수
+    total_qty_kg = sum(g["qty"] * u for u, g in kept.items())   # 총 중량(kg)
+    total_amount = sum(g["amount"] for g in kept.values())      # 총 거래금액(원)
     avg_price_per_pkg = total_amount / total_qty       # 원/포장(가중평균)
     avg_unit_qty = total_qty_kg / total_qty            # kg/포장(가중평균)
     return {

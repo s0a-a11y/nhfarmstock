@@ -650,7 +650,7 @@ const MKT_KEYS=['garak','daejeon','busan','gwangju','daegu'];
    가락시장 특품 원/kg = prices[garak] / BOX_KG
 ────────────────────────────────────────────────────────────── */
 const BOX_KG={
-  '감귤':15,'일반토마토':10,'방울토마토':5,'후지사과':10,'홍로사과':10,'감홍사과':10,'수박':18,'거봉포도':5,'캠벨포도':5,'샤인머스켓':5,'백도복숭아':4.5,'황도복숭아':4.5,'천도복숭아':4.5,'배':10,'단감':10,'태추단감':7.5,
+  '감귤(하우스)':3,'감귤(노지)':3,'일반토마토':10,'방울토마토':5,'후지사과':10,'홍로사과':10,'감홍사과':10,'수박':18,'거봉포도':5,'캠벨포도':5,'샤인머스켓':5,'백도복숭아':4.5,'황도복숭아':4.5,'천도복숭아':4.5,'배':10,'단감':10,'태추단감':7.5,
   '딸기':2,'단감':10,'참외':10,
   '양파':20,'무':20,'배추':8,'백오이':15,'취청오이':15,'가시오이':15,'대파':10,'양배추':8,'애호박':10,'쥬키니':10,'단호박':8,
   '수미감자':20,'두백감자':20,'홍감자':10,'호박':10,'청양고추':10,'풋고추':10,'적상추':4,'청상추':4,'포기상추':5
@@ -697,15 +697,24 @@ const GRADE_COEF={특:1.38,상:1.16,보통:1.00,하:0.66};
 ────────────────────────────────────────────────────────────── */
 
 const FRUITS=[
-  {name:'감귤',en:'Mandarin',hmap:[130,120,90,70,60,55,60,65,80,110,130,140],vix:41,
+  {name:'감귤(하우스)',en:'Mandarin (House)',hmap:[130,120,90,70,60,55,60,65,80,110,130,140],vix:41,
    origins:[{nm:'제주 서귀포',pct:59},{nm:'제주 제주시',pct:29},{nm:'전남 완도',pct:12}],
-   prices:{garak:135143,daejeon:118050,busan:65596,gwangju:123847,daegu:131360},
+   prices:{garak:37000,daejeon:35400,busan:38600,gwangju:36200,daegu:37500},
    chg:{garak:0.0,daejeon:0.0,busan:0.0,gwangju:0.0,daegu:0.0},
    vol:{garak:5.8,daejeon:0.6,busan:1.5,gwangju:0.5,daegu:2.2},
    vols_y1:{garak:8,daejeon:3,busan:5,gwangju:3,daegu:3},
    vols_y2:{garak:11,daejeon:3,busan:6,gwangju:4,daegu:4},
    sales:[{store:'이마트',logo:'#1D4ED8',type:'마트',pct:20,detail:'제주 감귤 15kg 기획 31,900원',period:'6.10~6.14'},{store:'농협하나로',logo:'#166534',type:'마트',pct:15,detail:'국산 감귤 15kg 특가',period:'6.09~6.15'}],
    insight:'저장 감귤 비수기. 하우스 감귤 소량 유지. 반입량 연중 최저 수준, 9~10월 노지 감귤 출하 전까지 약세 지속.'},
+  {name:'감귤(노지)',en:'Mandarin (Field)',hmap:[130,120,90,70,60,55,60,65,80,110,130,140],vix:41,
+   origins:[{nm:'제주 서귀포',pct:59},{nm:'제주 제주시',pct:29},{nm:'전남 완도',pct:12}],
+   prices:{garak:37000,daejeon:35400,busan:38600,gwangju:36200,daegu:37500},
+   chg:{garak:0.0,daejeon:0.0,busan:0.0,gwangju:0.0,daegu:0.0},
+   vol:{garak:0.5,daejeon:0.1,busan:0.1,gwangju:0.1,daegu:0.1},
+   vols_y1:{garak:1,daejeon:0,busan:0,gwangju:0,daegu:0},
+   vols_y2:{garak:1,daejeon:0,busan:0,gwangju:0,daegu:0},
+   sales:[],
+   insight:'노지 감귤은 9~10월부터 본격 출하. 현재는 비수기로 거래량 미미.'},
   {name:'일반토마토',en:'Tomato',hmap:[100,98,100,102,105,108,95,90,100,102,100,98],vix:44,
    origins:[{nm:'충남 부여',pct:44},{nm:'경북 칠곡',pct:33},{nm:'전북 완주',pct:23}],
    prices:{garak:27230,daejeon:26710,busan:10514,gwangju:27450,daegu:14206},
@@ -1057,6 +1066,16 @@ function garakSpecialKg(it){return Math.round(it.prices.garak/unitDiv(it.name))}
 
 /* 전국 가중평균 원/kg */
 function boxToKg(price,name){return Math.round(price/unitDiv(name))}
+/* 시장간 격차(%): (최대-최소)/중앙값*100. 분모를 최솟값 대신 중앙값으로 사용해
+   특정 시장의 소량/특수거래로 최솟값이 비정상적으로 작을 때 격차%가
+   폭증하는 것을 방지 (예: 대파 단위='단' 거래 vs '박스' 거래) */
+function priceGap(prices){
+  const sorted=[...prices].sort((a,b)=>a-b);
+  const mid=Math.floor(sorted.length/2);
+  const median=sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+  if(median<=0) return 0;
+  return Math.round((Math.max(...prices)-Math.min(...prices))/median*100);
+}
 function pricePerKg(it,mkt){
   const p=mkt==='all'?natAvg(it,'prices'):it.prices[mkt];
   return boxToKg(p,it.name);
@@ -1239,7 +1258,7 @@ function renderMainTbl(mkt){
       const y1v=isAll?natVolY1(it):it.vols_y1[mkt],y2v=isAll?natVolY2(it):it.vols_y2[mkt];
       const d1=((vol-y1v)/y1v*100).toFixed(1),d2=((vol-y2v)/y2v*100).toFixed(1);
       const prices=MKT_KEYS.map(k=>boxToKg(it.prices[k],it.name));
-      const gap=Math.round((Math.max(...prices)-Math.min(...prices))/Math.min(...prices)*100);
+      const gap=priceGap(prices);
       const sl=sigLight(curC);
 
       h+=`<tr onclick="openDp('${it.name}')">
@@ -1605,7 +1624,7 @@ function renderHero(){
   const data=ALL.map(it=>{
     const c=Object.values(it.chg).reduce((a,b)=>a+b,0)/5;
     const prices=MKT_KEYS.map(k=>boxToKg(it.prices[k],it.name));
-    const gap=Math.round((Math.max(...prices)-Math.min(...prices))/Math.min(...prices)*100);
+    const gap=priceGap(prices);
     const sale=(it.sales||[]).reduce((m,s)=>!m||s.pct>m.pct?s:m,null);
     return{it,c,gap,sale,p:garakSpecialKg(it)};
   });
