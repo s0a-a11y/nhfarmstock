@@ -1,0 +1,21 @@
+name: Debug Volume
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: 물량 필드 검증
+        run: python debug_volume.py
+        env:
+          AT_API_KEY: ${{ secrets.AT_API_KEY }}
