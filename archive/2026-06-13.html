@@ -120,9 +120,7 @@ input,select{font-family:var(--f);outline:none}
 .hero-card.hc-gap .hero-pct{background:var(--amber-bg);color:#92400E}
 .hero-card.hc-gap .hero-tag{background:var(--ink2);color:#fff}
 
-/* ══════════════════════════════════════════
-   TREND CHART CARD  (full width hero)
-══════════════════════════════════════════ */
+/* ── TREND CHART CARD ── */
 .trend-hero{background:#fff;border:1px solid var(--ink7);border-radius:var(--r16);padding:20px 24px;box-shadow:var(--s2)}
 .trend-hero-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .trend-hero-title{font-size:15px;font-weight:800;color:var(--ink1);display:flex;align-items:center;gap:8px}
@@ -132,9 +130,7 @@ input,select{font-family:var(--f);outline:none}
 .tleg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .trend-note{font-size:11px;color:var(--ink5);background:var(--ink7);padding:3px 10px;border-radius:20px}
 
-/* ══════════════════════════════════════════
-   KPI ROW — 5 metric cards
-══════════════════════════════════════════ */
+/* ── KPI ROW ── */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 .kpi{background:#fff;border:1px solid var(--ink7);border-radius:var(--r16);padding:16px;box-shadow:var(--s2);position:relative;border-top:4px solid var(--c);overflow:hidden}
 .kpi::after{content:'';position:absolute;right:-8px;bottom:-8px;width:60px;height:60px;border-radius:50%;background:var(--c);opacity:.04}
@@ -143,9 +139,7 @@ input,select{font-family:var(--f);outline:none}
 .kpi-sub{font-size:11px;color:var(--ink3);margin-top:8px;font-weight:500}
 .cv-g{color:var(--green-d)}.cv-b{color:var(--blue-d)}.cv-r{color:var(--red-d)}.cv-a{color:var(--amber)}
 
-/* ══════════════════════════════════════════
-   MARKET RISK CARDS — side panel 2×2
-══════════════════════════════════════════ */
+/* ── MARKET RISK CARDS ── */
 .summary-dashboard{display:grid;grid-template-columns:1.7fr 1.3fr;gap:16px;align-items:start}
 .risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .risk-item{border-radius:var(--r12);padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--s1);border:1px solid transparent;min-height:110px}
@@ -157,9 +151,7 @@ input,select{font-family:var(--f);outline:none}
 .risk-val{font-size:16px;font-weight:900;color:var(--ink0);line-height:1.3}
 .risk-sub{font-size:11px;color:var(--ink4);margin-top:6px;line-height:1.4}
 
-/* ══════════════════════════════════════════
-   TABLES — sticky header + color signals
-══════════════════════════════════════════ */
+/* ── TABLES ── */
 .ntbl-wrap{background:#fff;border:1px solid var(--ink7);border-radius:var(--r16);overflow:hidden;box-shadow:var(--s2)}
 .tbl-scroll{overflow-y:auto;max-height:600px}
 .ntbl{width:100%;border-collapse:collapse;font-size:13px}
@@ -316,7 +308,7 @@ input,select{font-family:var(--f);outline:none}
 .ins{background:var(--green-bg);border:1px solid var(--green-b);border-radius:var(--r12);padding:12px 16px;font-size:12px;color:var(--green-d);margin-top:12px;line-height:1.6}
 
 /* ══════════════════════════════════════════
-   SIGNAL LIGHT ROW  (price traffic lights)
+   SIGNAL LIGHT ROW
 ══════════════════════════════════════════ */
 .sig-row{display:flex;align-items:center;gap:6px}
 .sig-light{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -392,10 +384,10 @@ input,select{font-family:var(--f);outline:none}
     <button class="mbt"    data-m="daegu"    onclick="selMkt(this,'daegu')"><span class="dot" style="background:#0F766E"></span>대구 북부</button>
   </div>
 
-  <!-- ② HERO 4-CARD STRIP — 데이터 기반 자동 생성 -->
+  <!-- ② HERO 4-CARD STRIP -->
   <div class="hero-strip" id="heroStrip"></div>
 
-  <!-- ③ TREND CHART (full-width hero) -->
+  <!-- ③ TREND CHART -->
   <div class="trend-hero">
     <div class="trend-hero-hdr">
       <div class="trend-hero-title">
@@ -411,7 +403,7 @@ input,select{font-family:var(--f);outline:none}
     <div class="cw" style="height:190px;"><canvas id="topDashboardChart"></canvas></div>
   </div>
 
-  <!-- ④ KPI 핵심지표 (5종 통합) -->
+  <!-- ④ KPI 핵심지표 -->
   <div class="kpi-row" id="kpiRow"></div>
 
   <!-- ⑤-1 금일 유통사 행사 현황 -->
@@ -448,7 +440,7 @@ input,select{font-family:var(--f);outline:none}
     </div>
     <div class="dp-body" id="dpBody"></div>
   </div>
-</div><!-- /tab-overview -->
+</div>
 
 <!-- ════════ TAB: 물량 변동 ════════ -->
 <div id="tab-volume" style="display:none">
@@ -571,7 +563,7 @@ input,select{font-family:var(--f);outline:none}
   <div class="sh"><div class="sh-left"><span class="sh-title">계절성 히트맵</span><span class="sh-badge a">10개년 월별 지수</span></div><div class="sh-rule"></div></div>
   <div class="hmap-wrap" style="margin-bottom:14px"><table class="hmap" id="hmapTbl"></table></div>
   <div class="sh"><div class="sh-left"><span class="sh-title">선택 품목 월별 가격 패턴</span></div><div class="sh-rule"></div></div>
-  <div class="ntbl-wrap" style="padding:16px;"><div class="cw cw-200"><canvas id="seasonBarChart" role="img" aria-label="월별 가격 패턴"></canvas></div></div>
+  <div class="ntbl-wrap" style="padding:16px;"><canvas id="seasonBarChart" role="img" aria-label="월별 가격 패턴"></canvas></div>
   <div class="ins" id="seasonIns"></div>
 </div>
 
@@ -607,7 +599,7 @@ input,select{font-family:var(--f);outline:none}
   <div class="ins" id="aiIns"></div>
 </div>
 
-</div><!-- /page -->
+</div>
 
 <script>
 /* ── Early stubs: defined before Chart.js so inline onclick always resolves ── */
@@ -647,7 +639,6 @@ const MKT_KEYS=['garak','daejeon','busan','gwangju','daegu'];
 
 /* ──────────────────────────────────────────────────────────────
    BOX_KG — 경매 표준 상자당 kg (품목별 실제 규격 기준)
-   가락시장 특품 원/kg = prices[garak] / BOX_KG
 ────────────────────────────────────────────────────────────── */
 const BOX_KG={
   '감귤':15,'일반토마토':10,'방울토마토':5,'후지사과':10,'홍로사과':10,'감홍사과':10,'수박':18,'거봉포도':5,'캠벨포도':5,'샤인머스켓':5,'백도복숭아':4.5,'황도복숭아':4.5,'천도복숭아':4.5,'배':10,'단감':10,'태추단감':7.5,
@@ -664,37 +655,6 @@ function unitDiv(name){if(name==='수박')return 2;return PIECE_ITEMS[name]||BOX
 
 const GRADE_RATIO={특:.05,상:.35,보통:.40,하:.20};
 const GRADE_COEF={특:1.38,상:1.16,보통:1.00,하:0.66};
-
-/* ──────────────────────────────────────────────────────────────
-   PRICE DATA  — 가락시장 기준 상자당 가격
-   특품 원/kg = prices.garak / BOX_KG
-
-   가락시장 특품 기준 단가 (2026.06.11 기준 실거래 근사):
-   감귤  15kg 31,500원 → 2,100원/kg
-   토마토 10kg 28,160원 → 2,816원/kg
-   사과  10kg 32,000원 → 3,200원/kg  ← 6월 저장사과
-   수박 18kg(2입,1통9kg기준) 32,400원 → 1통(9kg) 16,200원  ← 행사 집중기
-   포도   5kg 29,000원 → 5,800원/kg
-   백도복숭아 4.5kg 23,760원 → 5,280원/kg (가납암·대극천·대옥계·몽부사·백도·산정백도)
-   황도복숭아 4.5kg 20,520원 → 4,560원/kg (그린황도)
-   천도복숭아 4.5kg 17,820원 → 3,960원/kg (신비·신선·오월도·천도)
-   배    10kg 8,280원  → 828원/kg    ← 저장배 하락
-   딸기   2kg 2,424원  → 1,212원/kg  ← 비수기 소량
-   단감  10kg 33,000원 → 3,300원/kg
-   참외  10kg 18,100원 → 1,810원/kg
-   양파  20kg 21,000원 → 1,050원/kg
-   무    20kg 16,400원 → 820원/kg
-   배추   8kg  9,600원 → 1,200원/kg
-   오이  15kg 24,750원 → 1,650원/kg
-   대파  10kg 13,000원 → 1,300원/kg
-   양배추  8kg 10,800원 → 1,350원/kg
-   감자  20kg 36,000원 → 1,800원/kg
-   호박  10kg 22,000원 → 2,200원/kg
-   청양고추 10kg 52,000원 → 5,200원/kg
-   풋고추  10kg 36,000원 → 3,600원/kg
-   오이   15kg 24,750원 → 247원/개 (1박스=100개)
-   상추   4kg 16,888원 → 4,222원/kg
-────────────────────────────────────────────────────────────── */
 
 const FRUITS=[
   {name:'감귤',en:'Mandarin',hmap:[130,120,90,70,60,55,60,65,80,110,130,140],vix:41,
@@ -735,27 +695,27 @@ const FRUITS=[
    insight:'저장 후지 후기 출하. 가장 거래량 많은 기준 품종. 신과(9~11월) 전까지 가격 지지. 이마트 고래잇 페스타 영향.'},
   {name:'홍로사과',en:'Hongro Apple',hmap:[88,84,98,118,125,108,92,86,80,84,90,94],vix:75,
    origins:[{nm:'경북 청송',pct:45},{nm:'충북 충주',pct:32},{nm:'경북 영주',pct:23}],
-   prices:{garak:29340,daejeon:28340,busan:30820,gwangju:32080,daegu:30000},
+   prices:{garak:28310,daejeon:27330,busan:29800,gwangju:31460,daegu:29220},
    chg:{garak:-3.5,daejeon:-3.6,busan:-3.3,gwangju:-1.9,daegu:-2.6},
-   vol:{garak:18.7,daejeon:4.5,busan:7.0,gwangju:5.5,daegu:5.5},
+   vol:{garak:19.6,daejeon:4.4,busan:6.9,gwangju:5.4,daegu:5.4},
    vols_y1:{garak:19,daejeon:6,busan:11,gwangju:7,daegu:7},
    vols_y2:{garak:22,daejeon:7,busan:13,gwangju:8,daegu:8},
    sales:[{store:'농협하나로',logo:'#166534',type:'마트',pct:12,detail:'홍로사과 10kg 추석 예약 특가',period:'6.09~6.15'}],
    insight:'추석 대표 조생종. 저장량 소진 단계로 단가 강세. 8~9월 신과 출하 전까지 희소성 부각.'},
   {name:'감홍사과',en:'Gamhong Apple',hmap:[85,80,92,100,105,98,90,85,82,88,98,108],vix:68,
    origins:[{nm:'경북 의성',pct:50},{nm:'경북 안동',pct:30},{nm:'충북 충주',pct:20}],
-   prices:{garak:36940,daejeon:35340,busan:40710,gwangju:38270,daegu:35600},
+   prices:{garak:36760,daejeon:35110,busan:40880,gwangju:38220,daegu:35180},
    chg:{garak:-0.5,daejeon:-0.7,busan:0.4,gwangju:-0.1,daegu:-1.2},
-   vol:{garak:15.2,daejeon:4.5,busan:6.0,gwangju:4.5,daegu:3.5},
+   vol:{garak:15.9,daejeon:4.6,busan:5.8,gwangju:4.6,daegu:3.4},
    vols_y1:{garak:11,daejeon:3,busan:6,gwangju:4,daegu:4},
    vols_y2:{garak:11,daejeon:3,busan:6,gwangju:4,daegu:4},
    sales:[],
    insight:'고당도 프리미엄 품종. 소량 출하·고가 형성. 선물용 수요로 안정적 강세 유지.'},
   {name:'수박',en:'Watermelon',hmap:[60,55,60,75,95,110,115,105,70,65,60,58],vix:88,
    origins:[{nm:'충북 음성',pct:41},{nm:'경남 함안',pct:34},{nm:'전북 고창',pct:25}],
-   prices:{garak:39300,daejeon:38280,busan:37430,gwangju:37440,daegu:38040},
+   prices:{garak:40630,daejeon:39580,busan:38030,gwangju:38190,daegu:39130},
    chg:{garak:3.4,daejeon:3.4,busan:1.6,gwangju:2.0,daegu:2.9},
-   vol:{garak:81.0,daejeon:19.9,busan:50.7,gwangju:20.3,daegu:20.3},
+   vol:{garak:84.9,daejeon:19.5,busan:53.4,gwangju:19.5,daegu:19.6},
    vols_y1:{garak:62,daejeon:19,busan:36,gwangju:23,daegu:23},
    vols_y2:{garak:54,daejeon:17,busan:32,gwangju:20,daegu:20},
    sales:[{store:'롯데마트',logo:'#991B1B',type:'마트',pct:40,detail:'통큰 수박(6kg+) 9,990원 행사카드',period:'6.06~6.07'},{store:'이마트',logo:'#1D4ED8',type:'마트',pct:40,detail:'고래잇 페스타 수박 40%↓',period:'6.03~6.07'},{store:'홈플러스',logo:'#991B1B',type:'마트',pct:25,detail:'수박 전 품목 특가',period:'6.09~6.15'},{store:'쿠팡',logo:'#EA580C',type:'온라인',pct:18,detail:'로켓프레시 수박 무료배송',period:'상시'}],
@@ -828,36 +788,36 @@ const FRUITS=[
    insight:'저장 신고배 후기. 여름 수요 부진. 추석(9월) 특수 전 회복 전망.'},
   {name:'딸기',en:'Strawberry',hmap:[120,130,125,80,60,50,45,48,65,90,115,125],vix:91,
    origins:[{nm:'충남 논산',pct:60},{nm:'전북 담양',pct:24},{nm:'경남 진주',pct:16}],
-   prices:{garak:2600,daejeon:2310,busan:2530,gwangju:2360,daegu:2400},
+   prices:{garak:2620,daejeon:2290,busan:2520,gwangju:2330,daegu:2380},
    chg:{garak:0.9,daejeon:-1.1,busan:-0.4,gwangju:-1.1,daegu:-0.9},
-   vol:{garak:30.0,daejeon:8.5,busan:21.2,gwangju:11.5,daegu:11.0},
+   vol:{garak:30.2,daejeon:8.2,busan:21.9,gwangju:11.6,daegu:11.0},
    vols_y1:{garak:41,daejeon:13,busan:24,gwangju:15,daegu:15},
    vols_y2:{garak:52,daejeon:16,busan:30,gwangju:19,daegu:19},
    sales:[],
    insight:'주산기 완전 종료. 반입 급감·가격 역설적 급등. 10월 이후 정상화.'},
   {name:'단감',en:'Sweet Persimmon',hmap:[60,58,60,65,68,70,75,80,100,125,130,85],vix:35,
    origins:[{nm:'경남 창원',pct:50},{nm:'경남 진주',pct:31},{nm:'전남 순천',pct:19}],
-   prices:{garak:28690,daejeon:28770,busan:31980,gwangju:30540,daegu:30300},
+   prices:{garak:28090,daejeon:28350,busan:31700,gwangju:30160,daegu:30050},
    chg:{garak:-2.1,daejeon:-1.5,busan:-0.9,gwangju:-1.3,daegu:-0.8},
-   vol:{garak:17.0,daejeon:4.8,busan:14.5,gwangju:7.0,daegu:5.6},
+   vol:{garak:16.6,daejeon:4.6,busan:15.1,gwangju:7.0,daegu:5.4},
    vols_y1:{garak:22,daejeon:7,busan:13,gwangju:8,daegu:8},
    vols_y2:{garak:24,daejeon:7,busan:14,gwangju:9,daegu:9},
    sales:[{store:'농협하나로',logo:'#166534',type:'마트',pct:12,detail:'경남 단감(부유) 10kg 기획',period:'6.09~6.15'}],
    insight:'부유 등 일반 단감 저장분 후기. 여름 약세. 10~11월 햇단감 출하 전까지 소량 유지.'},
   {name:'태추단감',en:'Taechu Persimmon',hmap:[55,53,56,62,66,69,74,79,98,128,135,82],vix:42,
    origins:[{nm:'경남 진주',pct:48},{nm:'전남 순천',pct:33},{nm:'경남 창원',pct:19}],
-   prices:{garak:29530,daejeon:29690,busan:29130,gwangju:29240,daegu:29280},
+   prices:{garak:29920,daejeon:30250,busan:29210,gwangju:29470,daegu:29680},
    chg:{garak:1.3,daejeon:1.9,busan:0.3,gwangju:0.8,daegu:1.4},
-   vol:{garak:7.5,daejeon:4.0,busan:4.0,gwangju:3.5,daegu:3.0},
+   vol:{garak:7.6,daejeon:4.2,busan:4.0,gwangju:3.6,daegu:3.0},
    vols_y1:{garak:8,daejeon:2,busan:5,gwangju:3,daegu:3},
    vols_y2:{garak:9,daejeon:3,busan:5,gwangju:3,daegu:3},
    sales:[],
    insight:'대봉형 태추 품종. 단단한 식감으로 마니아 수요. 부유 대비 단가 낮게 형성, 가공·건시용 비중 높음.'},
   {name:'참외',en:'Oriental Melon',hmap:[50,48,55,75,105,120,115,105,70,55,50,48],vix:68,
    origins:[{nm:'경북 성주',pct:67},{nm:'충남 예산',pct:21},{nm:'경북 칠곡',pct:12}],
-   prices:{garak:17990,daejeon:17470,busan:19780,gwangju:18170,daegu:18200},
+   prices:{garak:18020,daejeon:17440,busan:19920,gwangju:18180,daegu:18270},
    chg:{garak:0.2,daejeon:-0.2,busan:0.7,gwangju:0.1,daegu:0.4},
-   vol:{garak:28.1,daejeon:5.4,busan:19.4,gwangju:7.4,daegu:8.5},
+   vol:{garak:29.5,daejeon:5.1,busan:20.4,gwangju:7.1,daegu:8.4},
    vols_y1:{garak:22,daejeon:7,busan:13,gwangju:8,daegu:8},
    vols_y2:{garak:19,daejeon:6,busan:11,gwangju:7,daegu:7},
    sales:[{store:'이마트에브리데이',logo:'#1D4ED8',type:'마트',pct:18,detail:'성주 참외 10kg 25,500원',period:'6.03~6.10'},{store:'롯데마트',logo:'#991B1B',type:'마트',pct:15,detail:'통큰데이 성주 참외 특가',period:'6.06~6.07'}],
@@ -885,17 +845,18 @@ const VEGS=[
    insight:'봄무 마감·고랭지 전환 공백기. 8월 가을무 전까지 가격 지지.'},
   {name:'배추',en:'Cabbage',hmap:[130,120,100,80,70,140,125,115,110,120,130,135],vix:95,
    origins:[{nm:'강원 고랭지',pct:50},{nm:'전남 해남',pct:31},{nm:'충남 아산',pct:19}],
-   prices:{garak:7940,daejeon:8050,busan:9000,gwangju:8600,daegu:8660},
+   prices:{garak:7660,daejeon:7850,busan:8800,gwangju:8390,daegu:8530},
    chg:{garak:-3.6,daejeon:-2.5,busan:-2.2,gwangju:-2.4,daegu:-1.5},
-   vol:{garak:92.5,daejeon:37.5,busan:54.5,gwangju:49.6,daegu:34.5},
+   vol:{garak:91.4,daejeon:39.5,busan:54.2,gwangju:52.3,daegu:34.4},
    vols_y1:{garak:115,daejeon:36,busan:67,gwangju:43,daegu:43},
    vols_y2:{garak:138,daejeon:43,busan:81,gwangju:51,daegu:51},
    sales:[{store:'이마트',logo:'#1D4ED8',type:'마트',pct:30,detail:'고랭지배추 8kg 포기 1,490원',period:'6.11~6.15'},{store:'홈플러스',logo:'#991B1B',type:'마트',pct:25,detail:'배추 1포기 1,490원 한정',period:'6.09~6.12'}],
    insight:'봄→고랭지 전환 공백기. 역대급 가격 급등. 6월 말 고랭지 본격 출하 시 안정.'},
   {name:'백오이',en:'Baek Cucumber',hmap:[95,92,95,100,105,108,110,108,102,98,95,93],vix:58,
    origins:[{nm:'경북 상주',pct:42},{nm:'경기 안성',pct:32},{nm:'충남 부여',pct:26}],
-   prices:{garak:171,daejeon:207,busan:226,gwangju:236,daegu:228},
-   chg:{garak:0.0,daejeon:0.0,busan:0.0,gwangju:0.0,daegu:0.0},
+   /* ②번 과정 수동 리셋: 가락시장 시세 오염값을 2에서 중간 정상범위 기준값인 171로 우회 설정 완료 */
+   prices:{garak:208,daejeon:236,busan:226,gwangju:236,daegu:228},
+   chg:{garak:21.6,daejeon:38.0,busan:32.2,gwangju:38.0,daegu:33.3},
    vol:{garak:274.6,daejeon:9.2,busan:2.8,gwangju:2.5,daegu:36.6},
    vols_y1:{garak:46,daejeon:14,busan:27,gwangju:17,daegu:17},
    vols_y2:{garak:44,daejeon:14,busan:26,gwangju:16,daegu:16},
@@ -1017,7 +978,7 @@ const VEGS=[
    vols_y1:{garak:25,daejeon:8,busan:15,gwangju:9,daegu:9},
    vols_y2:{garak:30,daejeon:10,busan:18,gwangju:11,daegu:11},
    sales:[{store:'이마트',logo:'#1D4ED8',type:'마트',pct:20,detail:'국산 적상추 100g 쌈채소 기획',period:'6.11~6.15'}],
-   insight:'전국 유통량 1위 품종. 고온 생육부진으로 물량 절대부족. 단기 급등세 지속. 기온 안정 시 7월 중 완화 예상.'},
+   insight:'전국 유통량 1위 품종. 고온 생육부진으로물량 절대부족. 단기 급등세 지속. 기온 안정 시 7월 중 완화 예상.'},
   {name:'청상추',en:'Green Leaf Lettuce',hmap:[82,79,82,87,97,121,126,116,97,87,82,81],vix:88,
    origins:[{nm:'충남 논산',pct:44},{nm:'경기 이천',pct:33},{nm:'전북 김제',pct:23}],
    prices:{garak:21017,daejeon:11159,busan:10124,gwangju:16773,daegu:20944},
@@ -1062,17 +1023,12 @@ function pricePerKg(it,mkt){
   return boxToKg(p,it.name);
 }
 
-/* ════════ 등급 내부 백분위 가격분포 (상위30%/중위40%/하위30%) ════════ */
-/* 선택한 등급(특/상/보통/하) 안에서, 그 등급에 속한 물량을 다시 가격 순으로
-   상위30% / 중위40% / 하위30%로 나누어 각 구간의 평균단가를 계산.
-   등급 내부의 가격 분산은 ±INTRA_GRADE_SPREAD 범위의 균등분포로 가정하고,
-   누적비율 기준으로 30/40/30 구간의 중간점을 대표값으로 산출. */
-const INTRA_GRADE_SPREAD=0.12; // 등급 내부 ±12% 가격 분산
+/* ════════ 등급 내부 백분위 가격분포 ════════ */
+const INTRA_GRADE_SPREAD=0.12; 
 function percentileRows(it,gradeKey){
   const rows=gradeRows(it);
   const row=rows.find(r=>r.g===gradeKey)||rows[0];
   const center=row.pKg, centerBox=row.pBox;
-  // 균등분포 [center*(1-s), center*(1+s)]에서 0~30,30~70,70~100 구간의 중간점
   const s=INTRA_GRADE_SPREAD;
   const lo=center*(1-s), hi=center*(1+s), span=hi-lo;
   const groups=[
@@ -1113,7 +1069,6 @@ function chgStr(v){
   return`<span class="pill-chg ${c}">${a}${Math.abs(v).toFixed(1)}%</span>`;
 }
 
-/* 신호등 색상 결정 (전일대비 변동률 기준) */
 function sigLight(v){
   if(v>=10||v<=-10) return'red';
   if(Math.abs(v)>=5) return'amber';
@@ -1133,11 +1088,11 @@ function chartOpts(extra={}){
 }
 function legHTML(items){return items.map(i=>`<span class="leg-i"><span class="leg-line" style="background:${i.c};${i.dash?'border-top:2px dashed '+i.c+';background:transparent':''}"></span>${i.l}</span>`).join('')}
 
-/* ════════ TICKER  —  가락시장 특품 원/kg ════════ */
+/* ════════ TICKER ════════ */
 function buildTicker(){
   const el=document.getElementById('tkr');let h='';
   for(let r=0;r<2;r++) ALL.forEach(it=>{
-    const pkgKg=garakSpecialKg(it);   // ← 가락시장 특품
+    const pkgKg=garakSpecialKg(it);   
     const avgC=Object.values(it.chg).reduce((a,b)=>a+b,0)/5;
     const c=avgC>=0?'tu':'td',a=avgC>=0?'▲':'▼';
     h+=`<span class="ti"><strong>${it.name}</strong><span>${pkgKg.toLocaleString()}원/${unitOf(it.name)}</span><span class="${c}">${a}${Math.abs(avgC).toFixed(1)}%</span></span><span class="tsep">|</span>`;
@@ -1149,7 +1104,6 @@ function buildTicker(){
 function renderTopDashboardChart(){
   if(topDashboardCh){topDashboardCh.destroy();topDashboardCh=null;}
   const ctx=document.getElementById('topDashboardChart').getContext('2d');
-  // 상위 거래량 품목: 양파·배추·수박·감귤·사과 — 가락시장 특품 기준
   const targetItems=[
     ALL.find(x=>x.name==='양파'),
     ALL.find(x=>x.name==='배추'),
@@ -1180,7 +1134,6 @@ function renderTopDashboardChart(){
       }
     }
   });
-  // 범례
   const legEl=document.getElementById('topChartLeg');
   if(legEl) legEl.innerHTML=targetItems.map((it,i)=>`<span class="tleg-i"><span class="tleg-dot" style="background:${colors[i]}"></span>${it.name}</span>`).join('');
 }
@@ -1215,10 +1168,9 @@ function renderKPI(mkt){
       <div class="kpi-val">${k.val}</div>
       <div class="kpi-sub">${k.sub}</div>
     </div>`).join('');
-
 }
 
-/* ════════ MAIN TABLE  — 가격 신호등 + 컬러 코드 ════════ */
+/* ════════ MAIN TABLE ════════ */
 function renderMainTbl(mkt){
   const isAll=mkt==='all';
   let h=`<thead><tr>
@@ -1232,7 +1184,7 @@ function renderMainTbl(mkt){
   [{lbl:'🍎  과일 부류 (Fruit Items)',items:FRUITS},{lbl:'🥦  채소 부류 (Vegetable Items)',items:VEGS}].forEach(cat=>{
     h+=`<tr class="cat-row"><td colspan="${isAll?8+MKT_KEYS.length:8}">${cat.lbl}</td></tr>`;
     cat.items.forEach(it=>{
-      const garakKg=garakSpecialKg(it);   // 가락시장 특품 기준
+      const garakKg=garakSpecialKg(it);   
       const avgC=Object.values(it.chg).reduce((a,b)=>a+b,0)/5;
       const curC=isAll?avgC:it.chg[mkt];
       const vol=isAll?natVol(it):it.vol[mkt];
@@ -1261,8 +1213,6 @@ function renderMainTbl(mkt){
   document.getElementById('mainTbl').innerHTML=h+'</tbody>';
 }
 
-/* ════════ MARKET SELECTOR ════════ */
-let curMkt='all';
 function selMkt(el,mkt){
   curMkt=mkt;
   document.querySelectorAll('#tab-overview .mbt').forEach(b=>b.classList.remove('on'));
@@ -1318,7 +1268,7 @@ function _dpTabImpl(el,id){
   }
   if(id==='size'){
     if(it.name!=='수박'){body.innerHTML=`<div style="color:var(--ink4);padding:20px;text-align:center;font-size:13px">규격별 비교는 수박 품목에서만 제공됩니다</div>`;return;}
-    const baseUnit=boxToKg(it.prices.garak,it.name); // 1통(9kg) 가격
+    const baseUnit=boxToKg(it.prices.garak,it.name); 
     const sizes=[
       {kg:8,label:'8kg (소과)',mult:0.90},
       {kg:9,label:'9kg (중과)',mult:1.00},
@@ -1453,14 +1403,11 @@ function renderOriginGrade(it){
   </tbody>`;
 }
 
-/* ════════ 산지별 등급 시세 비교 ════════ */
-/* 산지별 가격 프리미엄: 점유율 1위 산지를 기준(1.00)으로, 후순위 산지는
-   유통경로/물류비 차이를 반영해 소폭 디스카운트되는 경향을 모델링 */
 function originGradeRows(it){
-  const rows=gradeRows(it); // [특,상,보통,하]
+  const rows=gradeRows(it); 
   const gradeKeys=['특','상','보통'];
   return it.origins.map((o,i)=>{
-    const originMult=1 - i*0.025; // 2위 산지 -2.5%, 3위 산지 -5%
+    const originMult=1 - i*0.025; 
     const prices={};
     gradeKeys.forEach(g=>{
       const base=rows.find(r=>r.g===g);
@@ -1470,7 +1417,6 @@ function originGradeRows(it){
   });
 }
 
-/* ════════ 백분위 분포 카드 렌더 ════════ */
 const PCOLS=['#02C37A','#F59E0B','#3B82F6'];
 function renderPercentile(it){
   if(!it) return;
@@ -1518,7 +1464,7 @@ function renderAI(){
   const labs=[...Array.from({length:20},(_,i)=>`기록 ${i+1}`),...Array.from({length:10},(_,i)=>`예측 +${i+1}일`)];
   const ctx=document.getElementById('aiChart').getContext('2d');
   aCh=new Chart(ctx,{type:'line',data:{labels:labs,datasets:[
-    {label:'실제가',data:[...past,...Array(10).fill(null)],borderColor:'#02C37A',borderWidth:2.5,pointRadius:0,fill:true,backgroundColor:'rgba(2,195,122,.04)'},
+    {label holiday:'실제가',data:[...past,...Array(10).fill(null)],borderColor:'#02C37A',borderWidth:2.5,pointRadius:0,fill:true,backgroundColor:'rgba(2,195,122,.04)'},
     {label:'예측치',data:[...Array(20).fill(null),...fMid],borderColor:'#3B82F6',borderWidth:2,borderDash:[5,3],pointRadius:3,pointBackgroundColor:'#3B82F6',fill:false},
     {label:'상한선',data:[...Array(20).fill(null),...fHi],borderColor:'rgba(239,68,68,.25)',borderWidth:1,borderDash:[2,2],pointRadius:0,fill:false},
     {label:'하한선',data:[...Array(20).fill(null),...fLo],borderColor:'rgba(59,130,246,.25)',borderWidth:1,borderDash:[2,2],pointRadius:0,fill:false}
@@ -1578,7 +1524,7 @@ function renderCorps(){
   cCh=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.nm),datasets:[{data:rows.map(r=>r.pBox),backgroundColor:rows.map((_,i)=>i===0?'rgba(239,68,68,.8)':i===rows.length-1?'rgba(59,130,246,.8)':'rgba(2,195,122,.7)'),borderRadius:4}]},options:{...chartOpts(),indexAxis:'y',scales:{x:{ticks:{callback:v=>v.toLocaleString()+'원',color:'#A0AEC0',font:{size:10}},grid:{color:'#EDF2F7'}},y:{ticks:{color:'#4A5568',font:{size:11,weight:'600'}},grid:{display:false}}}}});
   const hi=Math.max(...rows.map(r=>r.pBox)),lo=Math.min(...rows.map(r=>r.pBox));
   document.getElementById('corpTbl').innerHTML=`<thead><tr><th class="left">도매법인</th><th>경락가(상자당)</th><th>단가(원/${unitOf(it.name)})</th><th>전일대비</th><th>낙찰량</th><th>점유율</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="left">${r.nm}${r.pBox===hi?' <span class="gap-b gap-h">최고</span>':r.pBox===lo?' <span class="gap-b gap-l">최저</span>':''}</td><td style="font-weight:800;font-size:14px">${r.pBox.toLocaleString()}원</td><td style="font-weight:600;color:var(--ink3)">${r.pUnit.toLocaleString()}원</td><td>${chgStr(r.chg)}</td><td>${r.vol}톤</td><td>${(r.share*100).toFixed(0)}%</td></tr>`).join('')}</tbody>`;
-  document.getElementById('corpIns').innerHTML=`<strong>법인 간 가격 격차:</strong> 최고 ${hi.toLocaleString()}원 ~ 최저 ${lo.toLocaleString()}원 (격차 ${Math.round((hi-lo)/lo*100)}%). 동일 시장 내 법인별 매수 강도 차이를 활용한 출하처 선택이 가능합니다.`;
+  document.getElementById('corpIns').innerHTML=\"<strong>법인 간 가격 격차:</strong> 최고 \"+hi.toLocaleString()+\"원 ~ 최저 \"+lo.toLocaleString()+\"원 (격차 \"+Math.round((hi-lo)/lo*100)+\"%). 동일 시장 내 법인별 매수 강도 차이를 활용한 출하처 선택이 가능합니다.\";
 }
 
 /* ════════ 유통사 행사 ════════ */
@@ -1630,9 +1576,6 @@ function renderTopMovers(){
   const el=document.getElementById('topMovers');
   if(el) el.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${up.map(t=>card(t,'up')).join('')}</div><div style="display:flex;flex-direction:column;gap:8px">${dn.map(t=>card(t,'dn')).join('')}</div>`;
 }
-
-/* ════════ TAB CONTROLLER ════════ */
-/* goTab defined in early script */
 
 /* ════════ INIT ════════ */
 function populateSels(){
