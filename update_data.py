@@ -74,17 +74,17 @@ ITEM_CODES = {
 }
 
 # 백오이: 포장 중량(kg) -> 개수 매핑 (10kg=50개, 15/18/20/21kg=100개)
+# -> 1개당 중량(kg) = 포장중량 / 개수
 BAEK_OI_PCS = {
     10: 50,
     15: 100, 18: 100, 20: 100, 21: 100,
 }
-def baekoi_pieces(unit_qty_kg):
-    """포장 중량(kg)에 해당하는 개수를 반환. 매핑에 없으면 100개/15kg 비율로 근사."""
+def baekoi_kg_per_piece(unit_qty_kg):
+    """포장 중량(kg)에 해당하는 '1개당 중량(kg)'을 반환.
+    매핑에 없으면 15kg=100개(0.15kg/개) 비율로 근사."""
     rounded = round(unit_qty_kg)
-    if rounded in BAEK_OI_PCS:
-        return BAEK_OI_PCS[rounded]
-    # 알려지지 않은 규격 -> 15kg=100개 비율로 선형 근사
-    return max(1, round(unit_qty_kg * 100 / 15))
+    pieces = BAEK_OI_PCS.get(rounded, 100)
+    return unit_qty_kg / pieces if pieces > 0 else 0.15
 
 GROUPS = {}
 for nm, (l, mc, _) in ITEM_CODES.items():
@@ -98,7 +98,7 @@ def fetch_trades(whsl_mrkt_cd, lclsf, mclsf, ymd, retries=2):
         "cond[gds_lclsf_cd::EQ]": lclsf,
         "cond[gds_mclsf_cd::EQ]": mclsf,
         "cond[trd_clcln_ymd::EQ]": ymd,
-        "selectable": "gds_sclsf_cd,unit_qty,unit_nm,qty,scsbd_prc",
+        "selectable": "gds_sclsf_cd,unit_qty,unit_nm,qty,scsbd_prc,unit_tot_qty,totprc",
     }
     for attempt in range(retries + 1):
         try:
@@ -118,20 +118,27 @@ def fetch_trades(whsl_mrkt_cd, lclsf, mclsf, ymd, retries=2):
 
 
 def aggregate(items, sclsf_filter, is_baekoi=False):
-    """반입량(kg합계)과 가중평균 '포장단위당 낙찰가'(scsbd_prc, 원/포장)를 계산.
-    또한 가중평균 unit_qty(포장당 kg)도 함께 반환하여, 우리 BOX_KG와의
-    환산 비율을 계산할 수 있게 한다. 데이터 없으면 None.
+    """반입량(kg합계, unit_tot_qty 합)과, scsbd_prc(=qty당 가격, 즉 kg당 가격)의
+    물량가중평균인 'price_per_kg'을 계산. 데이터 없으면 None.
 
-    is_baekoi=True인 경우, 거래 건별로 포장중량(unit_qty)에 맞는 개수를
-    baekoi_pieces()로 환산해 '원/개' 가중평균(avg_price_per_piece)도 계산한다."""
+    필드 정의(실측 확인됨):
+      - qty: 거래 건수(박스/파렛트 개수)
+      - unit_qty: 1건당 중량(kg)
+      - scsbd_prc: 1kg당 낙찰가(원) — 'qty당' 가격이 아니라 kg당 단가
+      - unit_tot_qty = qty * unit_qty (총 kg)
+      - totprc = qty * scsbd_prc (총 금액)
+      => price_per_kg(가중평균) = sum(totprc) / sum(unit_tot_qty)
+
+    is_baekoi=True인 경우, 거래 건별로 1kg당 단가에 그 포장규격의
+    '1개당 중량(kg)'을 곱해 '원/개' 가중평균(avg_price_per_piece)도 계산한다."""
     valid = []
     for it in items:
         if sclsf_filter is not None and it.get("gds_sclsf_cd", "") not in sclsf_filter:
             continue
         try:
-            qty = float(it.get("qty", 0) or 0)          # 거래 건수(포장 개수)
-            price = float(it.get("scsbd_prc", 0) or 0)  # 포장 1개당 낙찰가(원)
-            unit_qty = float(it.get("unit_qty", 0) or 0)  # 포장 1개당 중량(kg 등)
+            qty = float(it.get("qty", 0) or 0)            # 거래 건수(박스/파렛트 개수)
+            price = float(it.get("scsbd_prc", 0) or 0)    # 1kg당 낙찰가(원)
+            unit_qty = float(it.get("unit_qty", 0) or 0)  # 1건당 중량(kg)
         except (TypeError, ValueError):
             continue
         if qty <= 0 or price <= 0 or unit_qty <= 0:
@@ -139,25 +146,24 @@ def aggregate(items, sclsf_filter, is_baekoi=False):
         valid.append((qty, price, unit_qty))
     if not valid:
         return None
-    total_qty = sum(q for q, _, _ in valid)            # 총 포장 개수
-    total_qty_kg = sum(q * u for q, _, u in valid)     # 총 중량(kg)
-    total_amount = sum(q * p for q, p, _ in valid)     # 총 거래금액(원)
-    avg_price_per_pkg = total_amount / total_qty       # 원/포장(가중평균)
-    avg_unit_qty = total_qty_kg / total_qty            # kg/포장(가중평균)
+    total_qty_kg = sum(q * u for q, _, u in valid)        # 총 중량(kg) = sum(unit_tot_qty)
+    total_amount = sum(q * u * p for q, p, u in valid)    # 총 금액(원) = sum(totprc)
+    price_per_kg = total_amount / total_qty_kg            # 가중평균 원/kg
     result = {
         "qty_kg": total_qty_kg,
-        "avg_price_per_pkg": avg_price_per_pkg,
-        "avg_unit_qty": avg_unit_qty,
+        "price_per_kg": price_per_kg,
     }
     if is_baekoi:
+        total_pieces_amount = 0.0  # sum(qty * unit_tot_qty * price_per_kg_of_trade) 형태로
         total_pieces = 0.0
-        total_amount_pieces = 0.0
         for q, p, u in valid:
-            pcs = baekoi_pieces(u)
-            total_pieces += q * pcs
-            total_amount_pieces += q * p
+            kg_per_piece = baekoi_kg_per_piece(u)
+            pieces_in_trade = (q * u) / kg_per_piece  # 이 거래의 총 개수
+            amount_in_trade = q * u * p                # 이 거래의 총 금액(원)
+            total_pieces += pieces_in_trade
+            total_pieces_amount += amount_in_trade
         if total_pieces > 0:
-            result["avg_price_per_piece"] = total_amount_pieces / total_pieces
+            result["avg_price_per_piece"] = total_pieces_amount / total_pieces
     return result
 
 
@@ -196,10 +202,8 @@ if KEY:
         g = mdata.get("garak")
         if g:
             box_kg = BOX_KG_DEBUG.get(nm, "?")
-            ppk = g['avg_price_per_pkg'] / g['avg_unit_qty'] if g['avg_unit_qty'] else 0
-            print(f"  {nm}: avg_unit_qty={g['avg_unit_qty']:.2f}, "
-                  f"avg_price_per_pkg={g['avg_price_per_pkg']:.1f}, "
-                  f"price_per_kg={ppk:.1f}, qty_kg={g['qty_kg']:.1f}, BOX_KG={box_kg}")
+            extra = f", avg_price_per_piece={g['avg_price_per_piece']:.1f}" if "avg_price_per_piece" in g else ""
+            print(f"  {nm}: price_per_kg={g['price_per_kg']:.1f}, qty_kg={g['qty_kg']:.1f}, BOX_KG={box_kg}{extra}")
 else:
     print("⚠️ AT_API_KEY 미설정 — 전체 랜덤 변동 모드")
 
@@ -236,8 +240,7 @@ def process(m):
         for i, mkey in enumerate(MKTS_K):
             agg = market_data.get(mkey)
             if agg:
-                api_pkg_kg = agg["avg_unit_qty"]  # API 포장 1개당 kg
-                price_per_kg = agg["avg_price_per_pkg"] / api_pkg_kg if api_pkg_kg > 0 else 0
+                price_per_kg = agg["price_per_kg"]
                 if name in PIECE_ITEMS:
                     # 개수 단위 품목(백오이): 거래 건별로 포장중량->개수 환산한
                     # 가중평균 '원/개'(avg_price_per_piece)를 그대로 사용
