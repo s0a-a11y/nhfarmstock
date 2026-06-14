@@ -16,6 +16,6 @@ jobs:
           python-version: '3.12'
       - run: pip install requests
       - name: 물량 필드 검증
-        run: python test_citrus_codes.py
+        run: python audit_all_items.py
         env:
           AT_API_KEY: ${{ secrets.AT_API_KEY }}
