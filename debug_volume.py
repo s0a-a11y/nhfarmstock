@@ -4,9 +4,9 @@
 관계를 raw 데이터로 검증하기 위한 디버그 스크립트.
 
 확인 대상:
-- 양파(가락 vol=0.9톤, 대구 vol=246.2톤 — 극단적 불균형)
-- 백오이(가락 vol=274.6톤 — 압도적 1위)
-- 일반 비교군: 배추(상대적으로 균형)
+- 양배추 (시장간 격차 336% 의심)
+- 방울토마토 (시장간 격차 730% 의심)
+- 일반 비교군: 가시오이
 """
 import os
 import json
@@ -27,9 +27,9 @@ MARKETS = {
 
 # 검증 대상: (이름, 대분류, 중분류, 소분류필터)
 TARGETS = [
-    ("양파", "12", "01", ["01"]),
-    ("백오이", "09", "01", ["02"]),
-    ("배추", "10", "01", ["00"]),
+    ("양배추", "10", "04", ["01"]),
+    ("방울토마토", "08", "06", ["01"]),
+    ("가시오이", "09", "01", ["03"]),
 ]
 
 
@@ -72,15 +72,21 @@ for name, lclsf, mclsf, sclsf_filter in TARGETS:
         sum_qty_times_price = sum(
             float(it.get("qty",0) or 0) * float(it.get("scsbd_prc",0) or 0) for it in filtered
         )
+        price_per_kg = sum_qty_times_price / sum_qty_times_unit if sum_qty_times_unit else 0
         print(f"    sum(qty)={sum_qty:.1f}")
         print(f"    sum(unit_tot_qty)={sum_unit_tot_qty:.1f}")
         print(f"    sum(qty*unit_qty)={sum_qty_times_unit:.1f}")
         print(f"    sum(totprc)={sum_totprc:.1f}")
         print(f"    sum(qty*scsbd_prc)={sum_qty_times_price:.1f}")
+        print(f"    price_per_kg(가중평균)={price_per_kg:.2f}")
 
-        # 첫 3건 raw 데이터
-        print(f"    --- 샘플 3건 ---")
-        for it in filtered[:3]:
+        # unit_qty 분포 (포장 단위가 시장 내에서도 섞여있는지 확인)
+        unit_qtys = sorted(set(float(it.get("unit_qty",0) or 0) for it in filtered))
+        print(f"    unit_qty 종류={unit_qtys}")
+
+        # 첫 5건 raw 데이터
+        print(f"    --- 샘플 5건 ---")
+        for it in filtered[:5]:
             print(f"      qty={it.get('qty')}, unit_qty={it.get('unit_qty')}, "
                   f"unit_nm={it.get('unit_nm')}, unit_tot_qty={it.get('unit_tot_qty')}, "
                   f"scsbd_prc={it.get('scsbd_prc')}, totprc={it.get('totprc')}, "
