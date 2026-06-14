@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-물량(qty)/단위물량(unit_qty)/단위총물량(unit_tot_qty)/낙찰가(scsbd_prc)/총가격(totprc)
-관계를 raw 데이터로 검증하기 위한 디버그 스크립트.
-
-확인 대상:
-- 양배추 (시장간 격차 336% 의심)
-- 방울토마토 (시장간 격차 730% 의심)
-- 일반 비교군: 가시오이
+방울토마토(08-06)/양배추(10-04)에서 일부 시장의 필터후=0 건이 발생하는 원인 확인.
+-> 해당 (대분류,중분류) 전체 거래의 gds_sclsf_cd 분포를 시장별로 출력하여,
+   실제 사용되는 소분류 코드가 ITEM_CODES와 다른지 확인.
 """
 import os
-import json
 import requests
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 KST = timezone(timedelta(hours=9))
@@ -25,11 +21,10 @@ MARKETS = {
     "gwangju": "240001", "daegu": "220001",
 }
 
-# 검증 대상: (이름, 대분류, 중분류, 소분류필터)
+# (이름, 대분류, 중분류, 현재 설정된 소분류 필터)
 TARGETS = [
-    ("양배추", "10", "04", ["01"]),
     ("방울토마토", "08", "06", ["01"]),
-    ("가시오이", "09", "01", ["03"]),
+    ("양배추", "10", "04", ["01"]),
 ]
 
 
@@ -40,7 +35,7 @@ def fetch(whsl_mrkt_cd, lclsf, mclsf, ymd):
         "cond[gds_lclsf_cd::EQ]": lclsf,
         "cond[gds_mclsf_cd::EQ]": mclsf,
         "cond[trd_clcln_ymd::EQ]": ymd,
-        "selectable": "gds_sclsf_cd,unit_qty,unit_nm,unit_cd,qty,scsbd_prc,unit_tot_qty,totprc,pkg_nm",
+        "selectable": "gds_sclsf_cd,gds_sclsf_nm,unit_qty,unit_nm,qty,scsbd_prc,totprc,pkg_nm",
     }
     r = requests.get(f"{BASE}/trades", params=params, timeout=25)
     data = r.json()
@@ -51,43 +46,20 @@ def fetch(whsl_mrkt_cd, lclsf, mclsf, ymd):
     return [arr] if isinstance(arr, dict) else arr
 
 
-for name, lclsf, mclsf, sclsf_filter in TARGETS:
+for name, lclsf, mclsf, cur_filter in TARGETS:
     print(f"\n{'='*60}")
-    print(f"▶ {name} (lclsf={lclsf}, mclsf={mclsf}, sclsf_filter={sclsf_filter})")
+    print(f"▶ {name} (lclsf={lclsf}, mclsf={mclsf}, 현재필터={cur_filter})")
     print(f"{'='*60}")
     for mkey, mcode in MARKETS.items():
         items = fetch(mcode, lclsf, mclsf, yesterday)
-        filtered = [it for it in items if sclsf_filter is None or it.get("gds_sclsf_cd","") in sclsf_filter]
-        print(f"\n  [{mkey}] 전체 거래건수={len(items)}, 필터후={len(filtered)}")
-        if not filtered:
+        print(f"\n  [{mkey}] 전체 거래건수={len(items)}")
+        if not items:
             continue
-
-        # 합계 비교
-        sum_qty = sum(float(it.get("qty",0) or 0) for it in filtered)
-        sum_unit_tot_qty = sum(float(it.get("unit_tot_qty",0) or 0) for it in filtered)
-        sum_qty_times_unit = sum(
-            float(it.get("qty",0) or 0) * float(it.get("unit_qty",0) or 0) for it in filtered
-        )
-        sum_totprc = sum(float(it.get("totprc",0) or 0) for it in filtered)
-        sum_qty_times_price = sum(
-            float(it.get("qty",0) or 0) * float(it.get("scsbd_prc",0) or 0) for it in filtered
-        )
-        price_per_kg = sum_qty_times_price / sum_qty_times_unit if sum_qty_times_unit else 0
-        print(f"    sum(qty)={sum_qty:.1f}")
-        print(f"    sum(unit_tot_qty)={sum_unit_tot_qty:.1f}")
-        print(f"    sum(qty*unit_qty)={sum_qty_times_unit:.1f}")
-        print(f"    sum(totprc)={sum_totprc:.1f}")
-        print(f"    sum(qty*scsbd_prc)={sum_qty_times_price:.1f}")
-        print(f"    price_per_kg(가중평균)={price_per_kg:.2f}")
-
-        # unit_qty 분포 (포장 단위가 시장 내에서도 섞여있는지 확인)
-        unit_qtys = sorted(set(float(it.get("unit_qty",0) or 0) for it in filtered))
-        print(f"    unit_qty 종류={unit_qtys}")
-
-        # 첫 5건 raw 데이터
-        print(f"    --- 샘플 5건 ---")
-        for it in filtered[:5]:
-            print(f"      qty={it.get('qty')}, unit_qty={it.get('unit_qty')}, "
-                  f"unit_nm={it.get('unit_nm')}, unit_tot_qty={it.get('unit_tot_qty')}, "
-                  f"scsbd_prc={it.get('scsbd_prc')}, totprc={it.get('totprc')}, "
-                  f"pkg_nm={it.get('pkg_nm')}")
+        # gds_sclsf_cd 분포
+        counter = Counter((it.get("gds_sclsf_cd"), it.get("gds_sclsf_nm")) for it in items)
+        for (code, nm), cnt in counter.most_common(10):
+            # 해당 코드의 unit_qty, scsbd_prc 샘플도 같이 출력
+            sample = next((it for it in items if it.get("gds_sclsf_cd") == code), {})
+            print(f"    sclsf_cd={code} ({nm}): {cnt}건  "
+                  f"| 샘플: unit_qty={sample.get('unit_qty')}, scsbd_prc={sample.get('scsbd_prc')}, "
+                  f"pkg_nm={sample.get('pkg_nm')}")
