@@ -30,7 +30,7 @@ MKTS_K = ["garak", "daejeon", "busan", "gwangju", "daegu"]
 
 MARKETS = {
     "garak": "110001", "daejeon": "250001", "busan": "210001",
-    "gwangju": "240001", "daegu": "220001",
+    "gwangju": "240004", "daegu": "220001",
 }
 
 # 품목명 -> (대분류, 중분류, [소분류코드...] or None=중분류 전체)
@@ -269,21 +269,26 @@ def process(m):
             new_prices.append(new_price)
             new_vols.append(new_vol)
 
-        # 안전장치 2 (시장간 cross-validation): 새로 계산된 5개 시장 가격의
-        # 중앙값(median) 대비 특정 시장만 2.5배 이상/0.4배 이하로 극단적으로
-        # 벗어나는 경우, 해당 시장의 신규값을 폐기하고 기존값으로 되돌린다.
-        # (예: 백오이/감귤하우스/샤인머스켓처럼 한 시장의 소수 특수거래가
-        #  가중평균을 왜곡해 다른 4개 시장과 단위가 안 맞아 보이는 케이스)
-        sorted_prices = sorted(new_prices)
-        mid = len(sorted_prices) // 2
-        median_price = (sorted_prices[mid] if len(sorted_prices) % 2
-                         else (sorted_prices[mid - 1] + sorted_prices[mid]) / 2)
-        if median_price > 0:
-            for i in range(5):
-                if new_prices[i] > median_price * 2.5 or new_prices[i] < median_price * 0.4:
-                    new_prices[i] = old_prices[i]
-                    new_vols[i] = old_vols[i]
-                    has_agg[i] = False
+        # 안전장치 2 (시장간 cross-validation): 이번에 '실데이터로 새로 계산된'
+        # (has_agg=True) 시장이 2개 이상일 때만 적용. 그 시장들의 가격 중앙값
+        # 대비 2.5배 이상/0.4배 이하로 극단적으로 벗어나는 시장은 단위 환산
+        # 오류로 간주해 기존값으로 되돌린다.
+        # 실데이터가 1개뿐인 경우(나머지 4개는 placeholder old_price 유지)는
+        # 비교 기준이 없으므로 적용하지 않는다 — 그 1개 시장 값을 신뢰한다.
+        # (예: 백오이/감귤하우스처럼 한 시장의 소수 특수거래가 가중평균을
+        #  왜곡해 다른 실데이터 시장들과 단위가 안 맞아 보이는 케이스만 교정)
+        real_indices = [i for i in range(5) if has_agg[i]]
+        if len(real_indices) >= 2:
+            real_prices = sorted(new_prices[i] for i in real_indices)
+            n = len(real_prices)
+            mid = n // 2
+            median_price = real_prices[mid] if n % 2 else (real_prices[mid - 1] + real_prices[mid]) / 2
+            if median_price > 0:
+                for i in real_indices:
+                    if new_prices[i] > median_price * 2.5 or new_prices[i] < median_price * 0.4:
+                        new_prices[i] = old_prices[i]
+                        new_vols[i] = old_vols[i]
+                        has_agg[i] = False
 
         new_chgs = []
         for i in range(5):
