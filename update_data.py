@@ -331,6 +331,58 @@ def repl(m):
 
 html = ITEM_BLOCK.sub(repl, html)
 
+# ──────────────────────────────────────────
+# 3) BOX_KG 동적 갱신 (출하 시기별 SKU 중량 변동 대응)
+#    실데이터가 2개 이상 시장에서 확보된 품목의 avg_unit_qty 가중평균으로
+#    BOX_KG를 업데이트. 수박은 "통(9kg)" 고정이므로 제외.
+# ──────────────────────────────────────────
+updated_box_kg = dict(BOX_KG)
+for nm, mdata in results.items():
+    if nm == "수박":
+        continue
+    # 실데이터 확보 시장들의 avg_unit_qty를 거래량(qty_kg) 기준 가중평균
+    total_kg = sum(agg["qty_kg"] for agg in mdata.values())
+    if total_kg <= 0:
+        continue
+    wavg_unit = sum(agg["avg_unit_qty"] * agg["qty_kg"] for agg in mdata.values()) / total_kg
+    # 0.5kg 단위로 반올림 (1.0, 1.5, 2.0, 2.5, 3.0 ... 등 현실적 포장단위)
+    rounded = round(wavg_unit * 2) / 2
+    if rounded <= 0:
+        continue
+    old_val = BOX_KG.get(nm, 10)
+    # SKU 변동이 명확한 경우에만 갱신 (기존 BOX_KG 대비 0.5배 미만이거나 2배 초과)
+    # 소폭 차이(±100% 이내)는 포장 혼재에 의한 자연스러운 가중평균 오차로 보고 유지
+    if rounded < old_val * 0.5 or rounded > old_val * 2.0:
+        updated_box_kg[nm] = rounded
+
+# BOX_KG 변경사항 디버그 출력
+changed = {nm: (BOX_KG.get(nm), v) for nm, v in updated_box_kg.items()
+           if BOX_KG.get(nm) != v}
+if changed:
+    print("--- BOX_KG 갱신 ---")
+    for nm, (old, new) in changed.items():
+        print(f"  {nm}: {old} -> {new}")
+
+# index.html의 const BOX_KG={...} 재작성
+def build_box_kg_str(bk_dict, original_str):
+    """원본 문자열의 줄바꿈/정렬 구조를 유지하면서 값만 갱신"""
+    def replacer(m):
+        key = m.group(1)
+        new_val = bk_dict.get(key)
+        if new_val is None:
+            return m.group(0)
+        # 정수면 정수, 소수면 소수 표시
+        val_str = str(int(new_val)) if new_val == int(new_val) else str(new_val)
+        return f"'{key}':{val_str}"
+    return re.sub(r"'([^']+)':([\d.]+)", replacer, original_str)
+
+html = re.sub(
+    r"(const BOX_KG=\{)(.*?)(\};)",
+    lambda m: m.group(1) + build_box_kg_str(updated_box_kg, m.group(2)) + m.group(3),
+    html, flags=re.S
+)
+BOX_KG = updated_box_kg  # 이후 로직에서 사용될 경우를 위해 업데이트
+
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
 
