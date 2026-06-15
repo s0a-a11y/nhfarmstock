@@ -236,7 +236,8 @@ def process(m):
     if market_data:
         # 우리 사이트 기준 "박스(포장)당 kg" (BOX_KG). 수박은 18kg(2입) 박스 기준.
         our_box_kg = BOX_KG.get(name, 10)
-        new_prices, new_vols, new_chgs = [], [], []
+        new_prices, new_vols = [], []
+        has_agg = []
         for i, mkey in enumerate(MKTS_K):
             agg = market_data.get(mkey)
             if agg:
@@ -249,22 +250,44 @@ def process(m):
                     # 우리 표시는 '박스(BOX_KG)당 원'
                     new_price = max(100, round(price_per_kg * our_box_kg))
                 new_vol = round(agg["qty_kg"] / 1000, 1)  # kg -> 톤
+                has_agg.append(True)
             else:
                 new_price = old_prices[i]
                 new_vol = old_vols[i]
-            # 안전장치: 계산된 가격이 기존가 대비 0.2~5배 범위를 벗어나면
-            # 단위 환산 오류로 간주하고 기존가를 유지 (화면 붕괴 방지)
+                has_agg.append(False)
+            # 안전장치 1 (시장 자체 검증): 계산된 가격이 기존가 대비 0.2~5배
+            # 범위를 벗어나면 단위 환산 오류로 간주하고 기존가를 유지
             # 단, 백오이는 과거 단위 환산 버그로 old_price 자체가 비정상적으로
             # 작게 누적된 상태이므로, 절대 범위(상자당 5,000~40,000원)로만 검증
             if name == "백오이":
                 if not (5000 <= new_price <= 40000):
                     new_price = old_prices[i]
+                    has_agg[i] = False
             elif old_prices[i] > 0 and not (old_prices[i] * 0.2 <= new_price <= old_prices[i] * 5):
                 new_price = old_prices[i]
-
-            chg = round((new_price - old_prices[i]) / old_prices[i] * 100, 1) if old_prices[i] > 0 else 0.0
+                has_agg[i] = False
             new_prices.append(new_price)
             new_vols.append(new_vol)
+
+        # 안전장치 2 (시장간 cross-validation): 새로 계산된 5개 시장 가격의
+        # 중앙값(median) 대비 특정 시장만 2.5배 이상/0.4배 이하로 극단적으로
+        # 벗어나는 경우, 해당 시장의 신규값을 폐기하고 기존값으로 되돌린다.
+        # (예: 백오이/감귤하우스/샤인머스켓처럼 한 시장의 소수 특수거래가
+        #  가중평균을 왜곡해 다른 4개 시장과 단위가 안 맞아 보이는 케이스)
+        sorted_prices = sorted(new_prices)
+        mid = len(sorted_prices) // 2
+        median_price = (sorted_prices[mid] if len(sorted_prices) % 2
+                         else (sorted_prices[mid - 1] + sorted_prices[mid]) / 2)
+        if median_price > 0:
+            for i in range(5):
+                if new_prices[i] > median_price * 2.5 or new_prices[i] < median_price * 0.4:
+                    new_prices[i] = old_prices[i]
+                    new_vols[i] = old_vols[i]
+                    has_agg[i] = False
+
+        new_chgs = []
+        for i in range(5):
+            chg = round((new_prices[i] - old_prices[i]) / old_prices[i] * 100, 1) if old_prices[i] > 0 else 0.0
             new_chgs.append(chg)
     else:
         # 실데이터 없음 -> 기존 방식(소폭 랜덤 변동)
