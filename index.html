@@ -1076,6 +1076,15 @@ function priceGap(prices){
   if(median<=0) return 0;
   return Math.round((Math.max(...prices)-Math.min(...prices))/median*100);
 }
+/* prices(MKT_KEYS 순서 배열)에서 최대/최소값을 가진 시장명을 반환 */
+function priceGapMarkets(prices){
+  let maxI=0,minI=0;
+  prices.forEach((p,i)=>{if(p>prices[maxI])maxI=i;if(p<prices[minI])minI=i;});
+  return{
+    maxMkt:MKTS[MKT_KEYS[maxI]].short, maxVal:prices[maxI],
+    minMkt:MKTS[MKT_KEYS[minI]].short, minVal:prices[minI],
+  };
+}
 function pricePerKg(it,mkt){
   const p=mkt==='all'?natAvg(it,'prices'):it.prices[mkt];
   return boxToKg(p,it.name);
@@ -1626,7 +1635,7 @@ function renderHero(){
     const prices=MKT_KEYS.map(k=>boxToKg(it.prices[k],it.name));
     const gap=priceGap(prices);
     const sale=(it.sales||[]).reduce((m,s)=>!m||s.pct>m.pct?s:m,null);
-    return{it,c,gap,sale,p:garakSpecialKg(it)};
+    return{it,c,gap,prices,sale,p:garakSpecialKg(it)};
   });
   const up=[...data].sort((a,b)=>b.c-a.c)[0];
   const dn=[...data].sort((a,b)=>a.c-b.c)[0];
@@ -1637,7 +1646,7 @@ function renderHero(){
     <div class="hero-card hc-surge" onclick="openDp('${up.it.name}')" style="cursor:pointer"><div><span class="hero-tag">🔥 가격 급등 경보</span></div><div class="hero-main">${up.it.name}</div><div><span class="hero-pct">▲ ${up.c.toFixed(1)}%</span></div><div class="hero-sub">${up.it.insight}<br>가락 특품 ${up.p.toLocaleString()}원/${unitOf(up.it.name)}</div></div>
     <div class="hero-card hc-drop" onclick="openDp('${dn.it.name}')" style="cursor:pointer"><div><span class="hero-tag">📦 공급 과잉 폭락</span></div><div class="hero-main">${dn.it.name}</div><div><span class="hero-pct">▼ ${Math.abs(dn.c).toFixed(1)}%</span></div><div class="hero-sub">${dn.it.insight}<br>가락 특품 ${dn.p.toLocaleString()}원/${unitOf(dn.it.name)}</div></div>
     <div class="hero-card hc-sale" onclick="openDp('${sl.it.name}')" style="cursor:pointer"><div><span class="hero-tag">🛒 유통사 대형 행사</span></div><div class="hero-main">${sl.it.name}</div><div><span class="hero-pct">${sl.sale.store} ${sl.sale.pct}%↓</span></div><div class="hero-sub">${sl.sale.detail}<br>가락 특품 ${sl.p.toLocaleString()}원/${unitOf(sl.it.name)}</div></div>
-    <div class="hero-card hc-gap" onclick="openDp('${gp.it.name}')" style="cursor:pointer"><div><span class="hero-tag">⚠️ 도매시장 격차 리스크</span></div><div class="hero-main">${gp.it.name}</div><div><span class="hero-pct">시장간 격차 ${gp.gap}%</span></div><div class="hero-sub">시장별 반입 불균형 · 교차 매매 추천<br>가락 특품 ${gp.p.toLocaleString()}원/${unitOf(gp.it.name)}</div></div>`;
+    <div class="hero-card hc-gap" onclick="openDp('${gp.it.name}')" style="cursor:pointer"><div><span class="hero-tag">⚠️ 도매시장 격차 리스크</span></div><div class="hero-main">${gp.it.name}</div><div><span class="hero-pct">시장간 격차 ${gp.gap}%</span></div><div class="hero-sub">시장별 반입 불균형 · 교차 매매 추천<br>가락 특품 ${gp.p.toLocaleString()}원/${unitOf(gp.it.name)}<br><span style="color:var(--ink4)">${(()=>{const gm=priceGapMarkets(gp.prices);return `${gm.maxMkt} ${gm.maxVal.toLocaleString()}원 vs ${gm.minMkt} ${gm.minVal.toLocaleString()}원`;})()}</span></div></div>`;
 }
 
 /* ════════ 등락률 TOP3 ════════ */
