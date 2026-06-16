@@ -234,7 +234,8 @@ def process(m):
 
     market_data = results.get(name)
     if market_data:
-        # 우리 사이트 기준 "박스(포장)당 kg" (BOX_KG). 수박은 18kg(2입) 박스 기준.
+        # 우리 사이트 기준 "박스(포장)당 kg" (BOX_KG). 가락공판장 공식 시세표는
+        # 모든 품목을 kg당으로 정규화 표시하므로(수박 포함) 동일 방식 적용.
         our_box_kg = BOX_KG.get(name, 10)
         new_prices, new_vols = [], []
         has_agg = []
@@ -243,12 +244,8 @@ def process(m):
             if agg:
                 api_pkg_kg = agg["avg_unit_qty"]  # API 포장 1개당 kg
                 price_per_kg = agg["avg_price_per_pkg"] / api_pkg_kg if api_pkg_kg > 0 else 0
-                if name == "수박":
-                    # 우리 표시는 '1통(9kg)당 원'
-                    new_price = max(100, round(price_per_kg * 9))
-                else:
-                    # 우리 표시는 '박스(BOX_KG)당 원'
-                    new_price = max(100, round(price_per_kg * our_box_kg))
+                # 우리 표시는 '박스(BOX_KG)당 원' -> 화면에서 /BOX_KG로 역산해 원/kg 표시
+                new_price = max(100, round(price_per_kg * our_box_kg))
                 new_vol = round(agg["qty_kg"] / 1000, 1)  # kg -> 톤
                 has_agg.append(True)
             else:
@@ -333,12 +330,10 @@ def repl(m):
 # 3) BOX_KG 동적 갱신 — ITEM_BLOCK.sub 이전에 실행해야
 #    process()가 갱신된 BOX_KG로 prices를 계산함 (prices와 BOX_KG 일치 보장)
 #    실데이터 avg_unit_qty 가중평균으로 BOX_KG 갱신.
-#    수박은 "통(9kg)" 고정. 기존 BOX_KG 대비 0.5배 미만 or 2배 초과일 때만 갱신.
+#    기존 BOX_KG 대비 0.5배 미만 or 2배 초과일 때만 갱신 (출하시기별 SKU 변동 대응).
 # ──────────────────────────────────────────
 updated_box_kg = dict(BOX_KG)
 for nm, mdata in results.items():
-    if nm == "수박":
-        continue
     total_kg = sum(agg["qty_kg"] for agg in mdata.values())
     if total_kg <= 0:
         continue
