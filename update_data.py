@@ -207,6 +207,15 @@ if KEY:
             print(f"  {nm}: avg_unit_qty={g['avg_unit_qty']:.2f}, "
                   f"avg_price_per_pkg={g['avg_price_per_pkg']:.1f}, "
                   f"price_per_kg={ppk:.1f}, qty_kg={g['qty_kg']:.1f}, BOX_KG={box_kg}")
+
+    # 디버그: 5개 시장 중 어느 시장이 데이터 확보됐는지 요약
+    # (garak만 갱신되고 나머지 4개가 placeholder로 남는 패턴 진단용)
+    print("--- 디버그: 시장별 데이터 확보 현황 (O=확보 -=없음) ---")
+    for nm in ITEM_CODES:
+        mdata = results.get(nm, {})
+        flags = "".join("O" if mdata.get(mk) else "-" for mk in MKTS_K)
+        if flags != "OOOOO":  # 5개 시장 모두 확보된 품목은 출력 생략(정상)
+            print(f"  {nm:10s}: garak={flags[0]} daejeon={flags[1]} busan={flags[2]} gwangju={flags[3]} daegu={flags[4]}")
 else:
     print("⚠️ AT_API_KEY 미설정 — 전체 랜덤 변동 모드")
 
