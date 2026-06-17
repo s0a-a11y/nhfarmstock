@@ -212,6 +212,8 @@ input,select{font-family:var(--f);outline:none}
 .pcs:hover{transform:translateY(-2px);box-shadow:var(--s2)}
 .pcs.uc{border-top-color:var(--red)}
 .pcs.dc{border-top-color:var(--blue)}
+.pcs.nc{border-top-color:var(--ink6)}
+.pcs-price.nt,.pcs-chg.nt{color:var(--ink4)}
 .pcs-name{font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:6px}
 .pcs-price{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
 .pcs-chg{font-size:11px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
@@ -755,8 +757,8 @@ const FRUITS=[
    insight:'저장 감귤 비수기. 하우스 감귤 소량 유지. 반입량 연중 최저 수준, 9~10월 노지 감귤 출하 전까지 약세 지속.'},
   {name:'감귤(노지)',en:'Mandarin (Field)',hmap:[130,120,90,70,60,55,60,65,80,110,130,140],vix:41,
    origins:[{nm:'제주 서귀포',pct:59},{nm:'제주 제주시',pct:29},{nm:'전남 완도',pct:12}],
-   prices:{garak:36010,daejeon:34450,busan:37920,gwangju:35160,daegu:36770},
-   chg:{garak:-2.7,daejeon:-2.7,busan:-1.8,gwangju:-2.9,daegu:-1.9},
+   prices:{garak:38000,daejeon:36730,busan:39740,gwangju:37210,daegu:38430},
+   chg:{garak:2.7,daejeon:3.8,busan:3.0,gwangju:2.8,daegu:2.5},
    vol:{garak:0.5,daejeon:0.1,busan:0.1,gwangju:0.1,daegu:0.1},
    vols_y1:{garak:1,daejeon:0,busan:0,gwangju:0,daegu:0},
    vols_y2:{garak:1,daejeon:0,busan:0,gwangju:0,daegu:0},
@@ -791,18 +793,18 @@ const FRUITS=[
    insight:'저장 후지 후기 출하. 가장 거래량 많은 기준 품종. 신과(9~11월) 전까지 가격 지지. 이마트 고래잇 페스타 영향.'},
   {name:'홍로사과',en:'Hongro Apple',hmap:[88,84,98,118,125,108,92,86,80,84,90,94],vix:75,
    origins:[{nm:'경북 청송',pct:45},{nm:'충북 충주',pct:32},{nm:'경북 영주',pct:23}],
-   prices:{garak:28150,daejeon:26960,busan:29210,gwangju:30600,daegu:29420},
-   chg:{garak:0.2,daejeon:0.8,busan:0.0,gwangju:-0.7,daegu:1.4},
-   vol:{garak:20.1,daejeon:4.4,busan:6.4,gwangju:5.4,daegu:6.2},
+   prices:{garak:27970,daejeon:26260,busan:28970,gwangju:30540,daegu:28150},
+   chg:{garak:-0.4,daejeon:-1.8,busan:-0.8,gwangju:-0.9,daegu:-3.0},
+   vol:{garak:19.6,daejeon:4.5,busan:6.6,gwangju:5.7,daegu:5.9},
    vols_y1:{garak:19,daejeon:6,busan:11,gwangju:7,daegu:7},
    vols_y2:{garak:22,daejeon:7,busan:13,gwangju:8,daegu:8},
    sales:[{store:'농협하나로',logo:'#166534',type:'마트',pct:12,detail:'홍로사과 10kg 추석 예약 특가',period:'6.09~6.15'}],
    insight:'추석 대표 조생종. 저장량 소진 단계로 단가 강세. 8~9월 신과 출하 전까지 희소성 부각.'},
   {name:'감홍사과',en:'Gamhong Apple',hmap:[85,80,92,100,105,98,90,85,82,88,98,108],vix:68,
    origins:[{nm:'경북 의성',pct:50},{nm:'경북 안동',pct:30},{nm:'충북 충주',pct:20}],
-   prices:{garak:39120,daejeon:36900,busan:44440,gwangju:40960,daegu:36920},
-   chg:{garak:1.8,daejeon:0.8,busan:2.2,gwangju:1.7,daegu:0.4},
-   vol:{garak:16.2,daejeon:4.8,busan:5.5,gwangju:4.3,daegu:4.0},
+   prices:{garak:37420,daejeon:35630,busan:42230,gwangju:39260,daegu:36080},
+   chg:{garak:-2.6,daejeon:-2.7,busan:-2.9,gwangju:-2.5,daegu:-1.9},
+   vol:{garak:15.5,daejeon:4.9,busan:5.7,gwangju:4.2,daegu:4.0},
    vols_y1:{garak:11,daejeon:3,busan:6,gwangju:4,daegu:4},
    vols_y2:{garak:11,daejeon:3,busan:6,gwangju:4,daegu:4},
    sales:[],
@@ -893,27 +895,27 @@ const FRUITS=[
    insight:'주산기 완전 종료. 반입 급감·가격 역설적 급등. 10월 이후 정상화.'},
   {name:'단감',en:'Sweet Persimmon',hmap:[60,58,60,65,68,70,75,80,100,125,130,85],vix:35,
    origins:[{nm:'경남 창원',pct:50},{nm:'경남 진주',pct:31},{nm:'전남 순천',pct:19}],
-   prices:{garak:29010,daejeon:30000,busan:33060,gwangju:31500,daegu:31740},
-   chg:{garak:0.5,daejeon:1.0,busan:0.4,gwangju:2.6,daegu:1.7},
-   vol:{garak:16.1,daejeon:4.4,busan:14.1,gwangju:6.9,daegu:6.0},
+   prices:{garak:28980,daejeon:29610,busan:32860,gwangju:30560,daegu:31230},
+   chg:{garak:0.4,daejeon:-0.3,busan:-0.2,gwangju:-0.4,daegu:0.0},
+   vol:{garak:14.7,daejeon:4.6,busan:14.0,gwangju:6.5,daegu:5.5},
    vols_y1:{garak:22,daejeon:7,busan:13,gwangju:8,daegu:8},
    vols_y2:{garak:24,daejeon:7,busan:14,gwangju:9,daegu:9},
    sales:[{store:'농협하나로',logo:'#166534',type:'마트',pct:12,detail:'경남 단감(부유) 10kg 기획',period:'6.09~6.15'}],
    insight:'부유 등 일반 단감 저장분 후기. 여름 약세. 10~11월 햇단감 출하 전까지 소량 유지.'},
   {name:'태추단감',en:'Taechu Persimmon',hmap:[55,53,56,62,66,69,74,79,98,128,135,82],vix:42,
    origins:[{nm:'경남 진주',pct:48},{nm:'전남 순천',pct:33},{nm:'경남 창원',pct:19}],
-   prices:{garak:30650,daejeon:30590,busan:29860,gwangju:30500,daegu:30240},
-   chg:{garak:1.4,daejeon:0.6,busan:2.0,gwangju:1.5,daegu:1.2},
-   vol:{garak:7.7,daejeon:4.4,busan:3.4,gwangju:3.7,daegu:3.0},
+   prices:{garak:31250,daejeon:31640,busan:30350,gwangju:31230,daegu:30780},
+   chg:{garak:3.3,daejeon:4.0,busan:3.7,gwangju:3.9,daegu:2.9},
+   vol:{garak:7.4,daejeon:4.3,busan:3.5,gwangju:3.9,daegu:3.0},
    vols_y1:{garak:8,daejeon:2,busan:5,gwangju:3,daegu:3},
    vols_y2:{garak:9,daejeon:3,busan:5,gwangju:3,daegu:3},
    sales:[],
    insight:'대봉형 태추 품종. 단단한 식감으로 마니아 수요. 부유 대비 단가 낮게 형성, 가공·건시용 비중 높음.'},
   {name:'참외',en:'Oriental Melon',hmap:[50,48,55,75,105,120,115,105,70,55,50,48],vix:68,
    origins:[{nm:'경북 성주',pct:67},{nm:'충남 예산',pct:21},{nm:'경북 칠곡',pct:12}],
-   prices:{garak:18950,daejeon:18050,busan:20480,gwangju:18530,daegu:19400},
-   chg:{garak:-1.8,daejeon:-1.4,busan:-3.0,gwangju:-2.5,daegu:-1.4},
-   vol:{garak:31.5,daejeon:5.1,busan:23.8,gwangju:6.9,daegu:8.2},
+   prices:{garak:19590,daejeon:18240,busan:21380,gwangju:19060,daegu:19820},
+   chg:{garak:1.5,daejeon:-0.4,busan:1.3,gwangju:0.3,daegu:0.8},
+   vol:{garak:31.1,daejeon:5.3,busan:22.2,gwangju:6.9,daegu:8.1},
    vols_y1:{garak:22,daejeon:7,busan:13,gwangju:8,daegu:8},
    vols_y2:{garak:19,daejeon:6,busan:11,gwangju:7,daegu:7},
    sales:[{store:'이마트에브리데이',logo:'#1D4ED8',type:'마트',pct:18,detail:'성주 참외 10kg 25,500원',period:'6.03~6.10'},{store:'롯데마트',logo:'#991B1B',type:'마트',pct:15,detail:'통큰데이 성주 참외 특가',period:'6.06~6.07'}],
@@ -1477,10 +1479,13 @@ function renderItemBoard(){
     document.getElementById(id).innerHTML=items.map(it=>{
       const avg=Object.values(it.chg).reduce((a,b)=>a+b,0)/5;
       const kgP=garakSpecialKg(it);
-      return`<div class="pcs ${avg>=0?'uc':'dc'}" onclick="openDp('${it.name}')">
+      const dirCls=avg>0?'uc':avg<0?'dc':'nc';
+      const txtCls=avg>0?'up':avg<0?'dn':'nt';
+      const arrow=avg>0?'▲':avg<0?'▼':'–';
+      return`<div class="pcs ${dirCls}" onclick="openDp('${it.name}')">
         <div class="pcs-name">${it.name} <span style="font-size:10px;color:var(--ink5)">${it.en}</span></div>
-        <div class="pcs-price ${avg>=0?'up':'dn'}">${kgP.toLocaleString()}원<span style="font-size:10px;font-weight:500;color:var(--ink4)">/${unitOf(it.name)}</span></div>
-        <div class="pcs-chg ${avg>=0?'up':'dn'}">${avg>=0?'▲':'▼'}${Math.abs(avg).toFixed(1)}%</div>
+        <div class="pcs-price ${txtCls}">${kgP.toLocaleString()}원<span style="font-size:10px;font-weight:500;color:var(--ink4)">/${unitOf(it.name)}</span></div>
+        <div class="pcs-chg ${txtCls}">${arrow}${Math.abs(avg).toFixed(1)}%</div>
         <div class="pcs-vol">반입량 ${natVol(it).toLocaleString()}톤 · VIX ${it.vix}</div>
       </div>`;
     }).join('');
