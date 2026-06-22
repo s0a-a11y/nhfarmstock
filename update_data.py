@@ -21,12 +21,43 @@ import requests
 KST = timezone(timedelta(hours=9))
 now = datetime.now(KST)
 today = now.strftime("%Y-%m-%d")
-yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
 random.seed(f"{today}-{'AM' if now.hour < 10 else 'PM'}")
+
+def find_last_trading_day(max_lookback=7):
+    """가장 최근 거래일을 API 실조회로 확인 (주말/연휴 자동 소급).
+    가락시장 양파(12-01) 데이터가 실제로 존재하는 날짜를 역순 탐색.
+    양파는 전국 반입량 1위라 평일 거의 100% 데이터 존재."""
+    if not KEY:
+        return (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    for d in range(1, max_lookback + 1):
+        candidate = (now - timedelta(days=d)).strftime("%Y-%m-%d")
+        try:
+            r = requests.get(
+                f"{BASE}/trades",
+                params={
+                    "serviceKey": KEY, "returnType": "json",
+                    "numOfRows": 1, "pageNo": 1,
+                    "cond[whsl_mrkt_cd::EQ]": "110001",
+                    "cond[gds_lclsf_cd::EQ]": "12",
+                    "cond[gds_mclsf_cd::EQ]": "01",
+                    "cond[trd_clcln_ymd::EQ]": candidate,
+                    "selectable": "qty",
+                },
+                timeout=15,
+            )
+            data = r.json()
+            items = data.get("response", {}).get("body", {}).get("items", {})
+            if items and items.get("item"):
+                print(f"✅ 최근 거래일: {candidate} (오늘 기준 {d}일 전)")
+                return candidate
+        except Exception:
+            pass
+    return (now - timedelta(days=1)).strftime("%Y-%m-%d")
 
 KEY = os.environ.get("AT_API_KEY", "")
 BASE = "https://apis.data.go.kr/B552845/katOrigin"
 MKTS_K = ["garak", "daejeon", "busan", "gwangju", "daegu"]
+yesterday = find_last_trading_day()  # KEY/BASE 정의 후 호출
 
 MARKETS = {
     "garak": "110001", "daejeon": "250001", "busan": "210001",
